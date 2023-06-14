@@ -42,7 +42,7 @@ def dump_data(df, choice):
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
-        df = pd.read_csv('data/credit_spread.csv')
+        df = pd.read_csv('credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
@@ -51,7 +51,7 @@ def dump_data(df, choice):
         print(df.columns)
         df.to_sql('investing_cread_spread', engine, if_exists='replace')
     elif choice == 'coveredCalls':
-        df = pd.read_csv('data/covered_calls.csv')
+        df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
@@ -59,7 +59,7 @@ def dump_data(df, choice):
         print(df.columns)
         df.to_sql('investing_covered_calls', engine, if_exists='replace')
     else:
-        df = pd.read_csv('data/shortput.csv')
+        df = pd.read_csv('shortput.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
@@ -127,7 +127,7 @@ def main_covered_calls():
 
         html = extract_data(url=urls['coveredCalls'], choice='coveredCalls')
         data = parse_data(html, choice='coveredCalls')
-        data.to_csv('data/covered_calls.csv', index=False)
+        data.to_csv('covered_calls.csv', index=False)
         dump_data(df=data, choice='coveredCalls')
     except Exception as err:
         print(err)
@@ -143,7 +143,7 @@ def main_shortput():
 
         html = extract_data(url=urls['shortPuts'], choice='shortPuts')
         data = parse_data(html, choice='shortPuts')
-        data.to_csv('data/shortput.csv', index=False)
+        data.to_csv('shortput.csv', index=False)
         dump_data(df=data, choice='shortPuts')
     except Exception as err:
         print(err)
@@ -157,7 +157,7 @@ def main_cread_spread():
 
         html = extract_data(url=urls['CreditSpreadFile'], choice='CreditSpreadFile')
         data = parse_data(html, choice='CreditSpreadFile')  
-        data.to_csv('data/credit_spread.csv', index=False)
+        data.to_csv('credit_spread.csv', index=False)
         dump_data(df=data, choice='CreditSpreadFile') 
     except Exception as err:
         print(err)
