@@ -29,19 +29,20 @@ except KeyError:
     #logger.info("Token not available!")
     #raise
 
-user_name= os.environ.get('USER')
-password= os.environ.get('PASSWORD')
-host= os.environ.get('HOST')
-port='5432'
-database_name = os.environ.get('DATABASE')
-print(database_name)  # Verify the value of the 'DATABASE' environment variable
-db_name = f"localhost:5432/{database_name}"
+# user_name= os.environ.get('USER')
+# password= os.environ.get('PASSWORD')
+# host= os.environ.get('HOST')
+# port='5432'
+# database_name = os.environ.get('DATABASE')
+# print(database_name)  # Verify the value of the 'DATABASE' environment variable
+# db_name = f"localhost:5432/{database_name}"
+database_uri = os.environ.get('DATABASE_URI')
 
 
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
-    connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{db_name}'
-    engine = create_engine(connection_string)
+#     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{db_name}'
+    engine = create_engine(database_uri)
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
