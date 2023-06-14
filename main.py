@@ -33,7 +33,7 @@ user_name= os.environ.get('USER')
 password= os.environ.get('PASSWORD')
 host= os.environ.get('HOST')
 port='5432'
-db_name= f"localhost:5432/{os.environ.get('DATABASE')}"
+db_name = "localhost:5432/" + os.environ.get('DATABASE')
 
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
