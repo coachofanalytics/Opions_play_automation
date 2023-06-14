@@ -29,17 +29,11 @@ except KeyError:
     #logger.info("Token not available!")
     #raise
 
-# user_name= os.environ.get('USER')
-# password= os.environ.get('PASSWORD')
-# host= os.environ.get('HOST')
-# port='5432'
-# db_name=os.environ.get('DATABASE')
-
-user_name= 'avoxjmxvufzjyy'
-password= 'be04d7c0b5040e4a2defff78fc331bdfd085fa91abf1d24e3c3f2bcc8d87ab30'
-host= 'ec2-23-20-224-166.compute-1.amazonaws.com'
+user_name= os.environ.get('USER')
+password= os.environ.get('PASSWORD')
+host= os.environ.get('HOST')
 port='5432'
-db_name='d12q1lcmg9u6gm'
+db_name=os.environ.get('DATABASE')
 
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
