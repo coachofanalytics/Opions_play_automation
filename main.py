@@ -42,7 +42,7 @@ def dump_data(df, choice):
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
-        df = pd.read_csv('data\credit_spread.csv')
+        df = pd.read_csv('data/credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
@@ -51,7 +51,7 @@ def dump_data(df, choice):
         print(df.columns)
         df.to_sql('investing_cread_spread', engine, if_exists='replace')
     elif choice == 'coveredCalls':
-        df = pd.read_csv('data\covered_calls.csv')
+        df = pd.read_csv('data/covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
@@ -59,7 +59,7 @@ def dump_data(df, choice):
         print(df.columns)
         df.to_sql('investing_covered_calls', engine, if_exists='replace')
     else:
-        df = pd.read_csv('data\shortput.csv')
+        df = pd.read_csv('data/shortput.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
