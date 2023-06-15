@@ -9,8 +9,9 @@ env:
   USER: ${{secrets.USER}}
   HOST: ${{secrets.HOST}}
   PASSWORD: ${{secrets.PASSWORD}}
-  USERNAME: ${{secrets.USERNAME}}
-  KEY: ${{secrets.KEY}}
+  USERNAME: ${{secrets.OPTIONSPLAY_USERNAME}}
+  KEY: ${{secrets.OPTIONSPLAY_KEY}}
+  
 #   DATABASE: ${{secrets.DATABASE_PROD}}
 #   USER: ${{secrets.USER_PROD}}
 #   HOST: ${{secrets.HOST_PROD}}
