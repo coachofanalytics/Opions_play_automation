@@ -9,6 +9,8 @@ env:
   USER: ${{secrets.USER}}
   HOST: ${{secrets.HOST}}
   PASSWORD: ${{secrets.PASSWORD}}
+  USERNAME: ${{secrets.USERNAME}}
+  KEY: ${{secrets.KEY}}
   
 jobs:
   build:
