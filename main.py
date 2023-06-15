@@ -34,15 +34,9 @@ password= os.environ['PASSWORD']
 host= os.environ['HOST']
 port='5432'
 database_name = os.environ['DATABASE']
-# print(database_name)  # Verify the value of the 'DATABASE' environment variable
-# db_name = f"localhost:5432/{database_name}"
-\
 
-# user_name= 'ylzxqlnsngttgn'
-# password= '1a1ac20a3d7fca61e37743dc48441acd1935be26807b3512af61d7cb7b585311'
-# host= 'ec2-52-86-115-245.compute-1.amazonaws.com'
-# port='5432'
-# db_name='d8liqmn44tm61v'
+USERNAME = os.environ['USERNAME']
+KEY = os.environ['KEY']
 
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
@@ -98,13 +92,12 @@ def extract_data(url, choice):
         page = browser.new_page()
         
         page.goto(url=url)
-        username = 'info@codanalytics.net'
-        secret_key = '!ZK123sebe'
+
         page.fill(
-           'input#Login', username
+           'input#Login', USERNAME
         )
         page.fill(
-            'input#Password', secret_key
+            'input#Password', KEY
         )
 
         #click on submit button
