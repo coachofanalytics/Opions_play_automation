@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 8 * * *' # At 00:00 on Monday
 
+env:
+  DATABASE: ${{secrets.DATABASE}}
+  USER: ${{secrets.USER}}
+  HOST: ${{secrets.HOST}}
+  PASSWORD: ${{secrets.PASSWORD}}
+  
 jobs:
   build:
     runs-on: ubuntu-latest
