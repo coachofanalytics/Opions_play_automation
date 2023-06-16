@@ -51,15 +51,36 @@ def dump_data(df, choice):
         df.columns = new_columns
         df['id'] = df.reset_index().index
         df.rename(columns={'IV_Rank' : 'Rank'}, inplace=True)
-        print(df.columns)
+        df['Rank'] = df['Rank'].str.replace("%", "").astype(float)
+        df['Prem_Width'] = df['Prem_Width'].str.replace("%", "").astype(float)
+        df['Price'] = df['Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+
+        df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True)  # Convert 'Expiry' column to datetime format
+        df['curr_time'] = pd.to_datetime("now", utc=True)
+
+        df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
+
+        df = df[(df['days_to_expire'] >= 12) & (df['Rank'] > 30) & (df['Rank'] <= 100) & (df['Prem_Width'] >= 35) & (df['Price'] >= 15)]
+
         df.to_sql('investing_cread_spread', engine, if_exists='replace')
+
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
         print(new_columns)
         df.columns = new_columns
         df['id'] = df.reset_index().index
-        print(df.columns)
+        df['Implied_Volatility_Rank'] = df['Implied_Volatility_Rank'].str.replace('%', '').astype('float')
+        df['Raw_Return'] = df['Raw_Return'].str.replace('%', '').astype('float')
+        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').astype('float')
+        df['Stock_Price'] = df['Stock_Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+
+        df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True)  # Convert 'Expiry' column to datetime format
+        df['curr_time'] = pd.to_datetime("now", utc=True)
+
+        df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
+
+        df = df[(df['days_to_expire'] >= 21) & (df['Implied_Volatility_Rank'] > 4) & (df['Raw_Return'] >= 3.5) & (df['Stock_Price'] >= 15)]
         df.to_sql('investing_covered_calls', engine, if_exists='replace')
     else:
         df = pd.read_csv('shortput.csv')
@@ -67,7 +88,17 @@ def dump_data(df, choice):
         print(new_columns)
         df.columns = new_columns
         df['id'] = df.reset_index().index
-        print(df.columns)
+
+        df['Implied_Volatility_Rank'] = df['Implied_Volatility_Rank'].str.replace('%', '').astype('float')
+        df['Raw_Return'] = df['Raw_Return'].str.replace('%', '').astype('float')
+        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').astype('float')
+        df['Stock_Price'] = df['Stock_Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+        df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True) 
+        df['curr_time'] = pd.to_datetime("now", utc=True)
+
+        df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
+
+        df = df[(df['days_to_expire'] >= 21) & (df['Implied_Volatility_Rank'] > 50 ) & (df['Implied_Volatility_Rank'] <= 100) & (df['Annualized_Return'] >= 65) & (df['Stock_Price'] > 15)]
         df.to_sql('investing_shortput', engine, if_exists='replace')
 
 def parse_data(html, choice):
