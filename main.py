@@ -72,7 +72,7 @@ def dump_data(df, choice):
         df['id'] = df.reset_index().index
         df['Implied_Volatility_Rank'] = df['Implied_Volatility_Rank'].str.replace('%', '').astype('float')
         df['Raw_Return'] = df['Raw_Return'].str.replace('%', '').astype('float')
-        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').astype('float')
+        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').str.replace('∞', '0').astype('float')
         df['Stock_Price'] = df['Stock_Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
 
         df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True)  # Convert 'Expiry' column to datetime format
@@ -91,7 +91,7 @@ def dump_data(df, choice):
 
         df['Implied_Volatility_Rank'] = df['Implied_Volatility_Rank'].str.replace('%', '').astype('float')
         df['Raw_Return'] = df['Raw_Return'].str.replace('%', '').astype('float')
-        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').astype('float')
+        df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').str.replace('∞', '0').astype('float')
         df['Stock_Price'] = df['Stock_Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
         df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True) 
         df['curr_time'] = pd.to_datetime("now", utc=True)
