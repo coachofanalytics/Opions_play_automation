@@ -40,7 +40,7 @@ KEY = os.environ['KEY']
 
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
-    connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{db_name}'
+    connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
     engine = create_engine(connection_string)
     Session = sessionmaker(bind=engine)
 
