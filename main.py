@@ -59,7 +59,9 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
 
         df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
-
+        df['comment']='comment'
+    	df['is_active']=True
+    	df['is_featured']=True
         df = df[(df['days_to_expire'] >= 12) & (df['Rank'] > 30) & (df['Rank'] <= 100) & (df['Prem_Width'] >= 35) & (df['Price'] >= 15)]
 
         df.to_sql('investing_cread_spread', engine, if_exists='replace')
@@ -79,7 +81,9 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
 
         df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
-
+        df['comment']='comment'
+    	df['is_active']=True
+    	df['is_featured']=True
         df = df[(df['days_to_expire'] >= 21) & (df['Implied_Volatility_Rank'] > 4) & (df['Raw_Return'] >= 3.5) & (df['Stock_Price'] >= 15)]
         df.to_sql('investing_covered_calls', engine, if_exists='replace')
     else:
@@ -97,6 +101,10 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
 
         df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
+
+    	df['comment']='comment'
+    	df['is_active']=True
+    	df['is_featured']=True
 
         df = df[(df['days_to_expire'] >= 21) & (df['Implied_Volatility_Rank'] > 50 ) & (df['Implied_Volatility_Rank'] <= 100) & (df['Annualized_Return'] >= 65) & (df['Stock_Price'] > 15)]
         df.to_sql('investing_shortput', engine, if_exists='replace')
