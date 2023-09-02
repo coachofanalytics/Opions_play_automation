@@ -9,6 +9,7 @@ import subprocess
 import pandas as pd
 import datetime
 import psycopg2
+from utils import unusual_volume
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -59,13 +60,30 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
     
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
+        df['days_to_expire'] = df['days_to_expire'].abs()
         df['comment'] = ' '
         df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
-        df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
-    
-        df.to_sql('investing_credit_spread', engine, if_exists='replace')
+
+        try:
+            # Fetch the unusual volume dataframe
+            unusual_df = unusual_volume()
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+        except:
+            # Fetch the unusual volume dataframe
+            unusual_df = df
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+
+        # Apply the filter rules
+        df=merged_df
+        # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
+        filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
+        
+        #Promote records to database
+        filtered_df.to_sql('investing_credit_spread', engine, if_exists='replace')
         
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
@@ -82,16 +100,37 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
     
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
+        df['days_to_expire'] = df['days_to_expire'].abs()
         df['comment'] = 'comment'
         df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
-        df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 4) & (df['raw_return'] >= 3.5) & (df['stock_price'] >= 15)]
-        df.to_sql('investing_covered_calls', engine, if_exists='replace')
+
+        try:
+            # Fetch the unusual volume dataframe
+            unusual_df = unusual_volume()
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+        except:
+            # Fetch the unusual volume dataframe
+            unusual_df = df
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+            
+        # Apply the filter rules
+        df=merged_df
+        # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 4) & (df['raw_return'] >= 3.5) & (df['stock_price'] >= 15)]
+        filtered_df = df [(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] <= 65)]
+        
+        #Promote records to database
+        # df.to_sql('investing_covered_calls', engine, if_exists='replace')
+        filtered_df.to_sql('investing_covered_calls', engine, if_exists='replace')  
+        
+        
     else:
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
-        print(new_columns)
+        # print(new_columns)
         df.columns = new_columns
         df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
@@ -102,13 +141,33 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
         
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
+        df['days_to_expire'] = df['days_to_expire'].abs()
+        
         df['comment'] = ' '
         df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
-        df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
-        df.to_sql('investing_shortput', engine, if_exists='replace')
-
+        
+        try:
+            # Fetch the unusual volume dataframe
+            unusual_df = unusual_volume()
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+        except:
+            # Fetch the unusual volume dataframe
+            unusual_df = df
+            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
+            merged_df = pd.merge(df, unusual_df[['symbol']], on='symbol', how='inner')
+            
+        # Apply the filter rules
+        df=merged_df
+        # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
+        filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
+        
+        #Promote records to database
+        # df.to_sql('investing_shortput', engine, if_exists='replace')
+        filtered_df.to_sql('investing_shortput', engine, if_exists='replace')
+        
 def parse_data(html, choice):
     '''Extract the data table'''
     result = subprocess.run(["playwright", "install"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
