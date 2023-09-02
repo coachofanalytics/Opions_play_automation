@@ -45,27 +45,6 @@ def dump_data(df, choice):
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
-     #    df = pd.read_csv('credit_spread.csv')
-     #    new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
-     #    print(new_columns)
-     #    df.columns = new_columns
-     #    df['id'] = df.reset_index().index
-     #    df.rename(columns={'IV_Rank' : 'Rank'}, inplace=True)
-     #    df['Rank'] = df['Rank'].str.replace("%", "").astype(float)
-     #    df['Prem_Width'] = df['Prem_Width'].str.replace("%", "").astype(float)
-     #    df['Price'] = df['Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
-
-     #    df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True)  # Convert 'Expiry' column to datetime format
-     #    df['curr_time'] = pd.to_datetime("now", utc=True)
-
-     #    df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
-     #    df['comment'] = ' '
-    	# df['is_active']=True
-    	# df['is_featured']=True
-     #    df = df[(df['days_to_expire'] >= 12) & (df['Rank'] > 30) & (df['Rank'] <= 100) & (df['Prem_Width'] >= 35) & (df['Price'] >= 15)]
-
-     #    df.to_sql('investing_cread_spread', engine, if_exists='replace')
-        
         df = pd.read_csv('credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         print(new_columns)
@@ -80,7 +59,8 @@ def dump_data(df, choice):
         df['curr_time'] = pd.to_datetime("now", utc=True)
     
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
-        df['comment'] = ''
+        df['comment'] = ' '
+        df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
         df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
@@ -88,26 +68,6 @@ def dump_data(df, choice):
         df.to_sql('investing_credit_spread', engine, if_exists='replace')
         
     elif choice == 'coveredCalls':
-        # df = pd.read_csv('covered_calls.csv')
-        # new_columns = [x.replace(" ", "_").replace("/", "_") for x in df.columns]
-        # print(new_columns)
-        # df.columns = new_columns
-        # df['id'] = df.reset_index().index
-        # df['Implied_Volatility_Rank'] = df['Implied_Volatility_Rank'].str.replace('%', '').astype('float')
-        # df['Raw_Return'] = df['Raw_Return'].str.replace('%', '').astype('float')
-        # df['Annualized_Return'] = df['Annualized_Return'].str.replace('%', '').str.replace('∞', '0').astype('float')
-        # df['Stock_Price'] = df['Stock_Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
-    
-        # df['Expiry'] = pd.to_datetime(df['Expiry'], utc=True)  # Convert 'Expiry' column to datetime format
-        # df['curr_time'] = pd.to_datetime("now", utc=True)
-    
-        # df['days_to_expire'] = (df['Expiry'] - df['curr_time']).dt.days
-        # df['comment'] = 'comment'
-        # df['is_active'] = True
-        # df['is_featured'] = True
-        # df = df[(df['days_to_expire'] >= 21) & (df['Implied_Volatility_Rank'] > 4) & (df['Raw_Return'] >= 3.5) & (df['Stock_Price'] >= 15)]
-        # df.to_sql('investing_covered_calls', engine, if_exists='replace')
-
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         print(new_columns)
@@ -123,6 +83,7 @@ def dump_data(df, choice):
     
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
         df['comment'] = 'comment'
+        df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
         df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 4) & (df['raw_return'] >= 3.5) & (df['stock_price'] >= 15)]
@@ -142,6 +103,7 @@ def dump_data(df, choice):
         
         df['days_to_expire'] = (df['expiry'] - df['curr_time']).dt.days
         df['comment'] = ' '
+        df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
         df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
