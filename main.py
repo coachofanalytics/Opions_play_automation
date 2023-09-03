@@ -9,7 +9,7 @@ import subprocess
 import pandas as pd
 import datetime
 import psycopg2
-from utils import unusual_volume
+from utils import merged_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
