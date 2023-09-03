@@ -1,6 +1,7 @@
 name: run main.py
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 8 * * *' # At 00:00 on Monday
 
@@ -16,27 +17,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
       - name: checkout repo content
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2 # checkout the repository content to github runner
 
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-
-      - name: upgrade pip
-        run: python -m pip install --upgrade pip
-
-      - name: install python packages from requirements.txt
-        run: python -m pip install -r requirements.txt
-
-      - name: install playwright
-        run: python -m playwright install
-
-      - name: List installed Python packages
-        run: pip list
-
-      - name: execute py script
+          python-version: '3.9' # install the python version needed
+          
+      - name: install yfinance
+        run: pip install yfinance
+          
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          python3.9 -m pip install -r requirements.txt
+          # pip install -r requirements.txt
+          python -m playwright install
+          
+      - name: execute py script # run main.py
         env:
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
         run: python main.py
