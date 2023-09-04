@@ -5,19 +5,32 @@ from datetime import datetime, timedelta
 import psycopg2
 import yfinance as yf
 
-# user_name= os.environ.get('HEROKU_DEV_USER')
-# password= os.environ.get('HEROKU_DEV_PASS')
-# host= os.environ.get('HEROKU_DEV_HOST')
-# port='5432'
-# database_name =  os.environ.get('HEROKU_DEV_NAME')
+try:
+    SOME_SECRET = os.environ["SOME_SECRET"]
+except KeyError:
+    SOME_SECRET = "Token not available!"
+    #logger.info("Token not available!")
+    #raise
+
+user_name= os.environ['USER']
+password= os.environ['PASSWORD']
+host= os.environ['HOST']
+port='5432'
+database_name = os.environ['DATABASE']
+
+USERNAME = os.environ['USERNAME']
+KEY = os.environ['KEY']
+
 
 DB_CONFIG = {
-    'dbname': os.environ.get('HEROKU_PROD_NAME'),
-    'user': os.environ.get('HEROKU_PROD_USER'),
-    'password': os.environ.get('HEROKU_PROD_PASS'),
-    'host': os.environ.get('HEROKU_PROD_HOST'),
-    'port': os.environ.get('DB_PORT', '5432')
+    'dbname': database_name,
+    'user': user_name,
+    'password': password,
+    'host': host,
+    'port': port
 }
+
+
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
