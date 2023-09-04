@@ -91,8 +91,9 @@ def fetch_data_util(ticker_symbol):
     return data
 
 def unusual_volume():
-    path='C:/Users/CHRIS/web/opa/app/data/unusual_volume.csv'
-    udf = pd.read_csv(path, encoding='utf-8') if os.path.exists(path) else print("File does not exist")
+    # path='C:/Users/CHRIS/web/opa/app/data/unusual_volume.csv'
+    # udf = pd.read_csv(path, encoding='utf-8') if os.path.exists(path) else print("File does not exist")
+    udf= pd.read_csv('unusual_volume.csv')
     new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in udf.columns]
     udf.columns = new_columns
     udf['price'] = udf['price'].astype(float)
@@ -101,10 +102,10 @@ def unusual_volume():
     return filtered_udf
 
 def liquidity():
-    #getting unusual volume
-    lpath='C:/Users/CHRIS/web/opa/app/data/liquidity.csv'
-    ldf = pd.read_csv(lpath, encoding='utf-8') if os.path.exists(lpath) else print("File does not exist")
-    liquidity_new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in ldf.columns]
+    #getting liquidity
+    ldf= pd.read_csv('liquidity.csv')
+    new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in ldf.columns]
+    ldf.columns = new_columns
     ldf['liquidity'] = ldf['liquidity'].astype(float)
     # converstion and cleanup
     ldf['liquidity'] = ldf['liquidity'].astype(float)
