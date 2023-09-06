@@ -147,6 +147,8 @@ def dump_data(df, choice):
         df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
         df.to_sql('investing_shortput', engine, if_exists='replace')
 
+
+
 def parse_data(html, choice):
     '''Extract the data table'''
     result = subprocess.run(["playwright", "install"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
