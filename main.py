@@ -48,9 +48,8 @@ def dump_data(df, choice):
     if choice == 'CreditSpreadFile':
         df = pd.read_csv('credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
-        print(new_columns)
         df.columns = new_columns
-        # df['id'] = df.reset_index().index
+        df['id'] = df.reset_index().index
         df.rename(columns={'iv_rank': 'rank'}, inplace=True)
         df['rank'] = df['rank'].str.replace("%", "").astype(float)
         df['prem_width'] = df['prem_width'].str.replace("%", "").astype(float)
@@ -81,16 +80,19 @@ def dump_data(df, choice):
         df=merged_df
         # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
         # filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
-        
-        #Promote records to database
-        merged_df.to_sql('investing_credit_spread', engine, if_exists='replace')
+
+        # Generate unique IDs for the new data in merged_df
+        merged_df['id'] = range(1, len(merged_df) + 1)
+
+        # merged_df.to_sql('investing_credit_spread', engine, if_exists='append', index=False)
+        # Replace old records with new data in the database table
+        merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
-        print(new_columns)
         df.columns = new_columns
-        # df['id'] = df.reset_index().index
+        df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df.rename(columns={'implied_volatility_rank': 'rank'}, inplace=True)
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
@@ -124,16 +126,19 @@ def dump_data(df, choice):
         # filtered_df = df [(df['days_to_expire'] >= 21) & (df['rank'] <= 65)]
         
         #Promote records to database
-        # df.to_sql('investing_covered_calls', engine, if_exists='replace')
-        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace')  
+        # Generate unique IDs for the new data in merged_df
+        merged_df['id'] = range(1, len(merged_df) + 1)
+
+        # merged_df.to_sql('investing_covered_calls', engine, if_exists='append', index=False)
+        # Replace old records with new data in the database table
+        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
         
         
     else:
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
-        # print(new_columns)
         df.columns = new_columns
-        # df['id'] = df.reset_index().index
+        df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
         df['annualized_return'] = df['annualized_return'].str.replace('%', '').str.replace('∞', '0').astype('float')
@@ -165,9 +170,12 @@ def dump_data(df, choice):
         # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
         filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
         
-        #Promote records to database
-        # df.to_sql('investing_shortput', engine, if_exists='replace')
-        filtered_df.to_sql('investing_shortput', engine, if_exists='replace')
+        # Generate unique IDs for the new data in merged_df
+        filtered_df['id'] = range(1, len(merged_df) + 1)
+        # Replace old records with new data in the database table
+        # filtered_df.to_sql('investing_shortput', engine, if_exists='append', index=False) 
+        filtered_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        
         
 def parse_data(html, choice):
     '''Extract the data table'''
