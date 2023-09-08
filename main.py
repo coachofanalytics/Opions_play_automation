@@ -50,7 +50,7 @@ def dump_data(df, choice):
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         print(new_columns)
         df.columns = new_columns
-        df['id'] = df.reset_index().index
+        # df['id'] = df.reset_index().index
         df.rename(columns={'iv_rank': 'rank'}, inplace=True)
         df['rank'] = df['rank'].str.replace("%", "").astype(float)
         df['prem_width'] = df['prem_width'].str.replace("%", "").astype(float)
@@ -90,7 +90,7 @@ def dump_data(df, choice):
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         print(new_columns)
         df.columns = new_columns
-        df['id'] = df.reset_index().index
+        # df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df.rename(columns={'implied_volatility_rank': 'rank'}, inplace=True)
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
@@ -133,7 +133,7 @@ def dump_data(df, choice):
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         # print(new_columns)
         df.columns = new_columns
-        df['id'] = df.reset_index().index
+        # df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
         df['annualized_return'] = df['annualized_return'].str.replace('%', '').str.replace('∞', '0').astype('float')
@@ -220,7 +220,7 @@ def extract_data(url, choice):
 
 #Executing the options play tables
 def main_covered_calls():
-    print("COVERED CALLS")
+    # print("COVERED CALLS")
     try:
         urls = {
             'coveredCalls' : 'https://www.optionsplay.com/hub/covered-calls'
