@@ -126,6 +126,13 @@ def liquidity():
     filtered_ldf = ldf[(ldf['liquidity'] == 1)]
     return filtered_ldf
 
+def oversold_overbought():
+    #getting liquidity
+    osb_df= pd.read_csv('oversold_overbought_09102023.csv')
+    new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in osb_df.columns]
+    osb_df.columns = new_columns
+    return osb_df
+
 
 def merged_data():
     # Merge liquidity and unusual volume

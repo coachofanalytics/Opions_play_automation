@@ -9,7 +9,7 @@ import subprocess
 import pandas as pd
 import datetime
 import psycopg2
-from utils import merged_data
+from utils import merged_data,oversold_overbought
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -76,8 +76,10 @@ def dump_data(df, choice):
             # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
             merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
 
-        # Apply the filter rules
-        df=merged_df
+        # Fetch the overbought oversold merged dataframe
+        osb_df = oversold_overbought()
+        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+
         # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
         # filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
         
@@ -92,7 +94,7 @@ def dump_data(df, choice):
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df.columns = new_columns
-        df['id'] = df.reset_index().index
+        # df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df.rename(columns={'implied_volatility_rank': 'rank'}, inplace=True)
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
@@ -125,7 +127,10 @@ def dump_data(df, choice):
         # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 4) & (df['raw_return'] >= 3.5) & (df['stock_price'] >= 15)]
         # filtered_df = df [(df['days_to_expire'] >= 21) & (df['rank'] <= 65)]
         
-        #Promote records to database
+        # Fetch the overbought oversold merged dataframe
+        osb_df = oversold_overbought()
+        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
 
@@ -165,16 +170,16 @@ def dump_data(df, choice):
             # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
             merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
             
-        # Apply the filter rules
-        df=merged_df
+        # Fetch the overbought oversold merged dataframe
+        osb_df = oversold_overbought()
+        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+
         # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
-        filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
+        # filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
         
         # Generate unique IDs for the new data in merged_df
-        filtered_df['id'] = range(1, len(merged_df) + 1)
-        # Replace old records with new data in the database table
-        # filtered_df.to_sql('investing_shortput', engine, if_exists='append', index=False) 
-        filtered_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        merged_df['id'] = range(1, len(merged_df) + 1)
+        merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
         
 def parse_data(html, choice):
     '''Extract the data table'''
