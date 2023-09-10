@@ -66,26 +66,30 @@ def dump_data(df, choice):
         df['is_featured'] = True
 
         # Fetch the liquidity_unusualvolume merged dataframe
+        columns_to_keep =['symbol','strategy','type','price','sell_strike','buy_strike','expiry','premium','width','prem_width','rank','earnings_date','comment','on_date','is_active','is_featured']
         vl_merged_df = merged_data()
         try:
             # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+            # merged_df = pd.merge(df, vl_merged_df, on='symbol', how='inner')
+            merged_df = pd.merge(df[columns_to_keep], vl_merged_df[['symbol']], on='symbol', how='inner')
+
         except:
-            merged_df = df
+            print('No data')
 
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
-        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        fm_df = pd.merge(merged_df, osb_df, on='symbol', how='inner')
+        # final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
         # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
         # filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
         
         # Generate unique IDs for the new data in merged_df
-        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
+        fm_df['id'] = range(1, len(fm_df) + 1)
 
         # merged_df.to_sql('investing_credit_spread', engine, if_exists='append', index=False)
         # Replace old records with new data in the database table
-        final_merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
+        fm_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
@@ -110,11 +114,13 @@ def dump_data(df, choice):
 
         # Fetch the liquidity_unusualvolume merged dataframe
         vl_merged_df = merged_data()
+        columns_to_keep=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','implied_volatility_rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
         try:
             # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+            # merged_df = pd.merge(df, vl_merged_df, on='symbol', how='inner')
+            merged_df = pd.merge(df[columns_to_keep], vl_merged_df[['symbol']], on='symbol', how='inner')
         except:
-            merged_df = df
+            print('No data')
             
         # Apply the filter rules
         # df=merged_df
@@ -123,13 +129,14 @@ def dump_data(df, choice):
         
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
-        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        fm_df = pd.merge(merged_df, osb_df, on='symbol', how='inner')
+        # final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
-        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
+        fm_df['id'] = range(1, len(fm_df) + 1)
 
         # Replace old records with new data in the database table
-        final_merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
+        fm_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
         
         
     else:
@@ -152,6 +159,7 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
         
+        columns_to_keep=['symbol','action','expiry','days_to_expiry','strike_price','earnings_date','stock_price','raw_return','distance_to_strike','comment','on_date','is_active','is_featured']
         # Fetch the liquidity_unusualvolume merged dataframe
         vl_merged_df = merged_data()
         try:
