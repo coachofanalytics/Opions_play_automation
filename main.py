@@ -78,17 +78,17 @@ def dump_data(df, choice):
 
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
-        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
         # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
         # filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
         
         # Generate unique IDs for the new data in merged_df
-        merged_df['id'] = range(1, len(merged_df) + 1)
+        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
 
         # merged_df.to_sql('investing_credit_spread', engine, if_exists='append', index=False)
         # Replace old records with new data in the database table
-        merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
+        final_merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
@@ -129,14 +129,13 @@ def dump_data(df, choice):
         
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
-        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
-        merged_df['id'] = range(1, len(merged_df) + 1)
+        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
 
-        # merged_df.to_sql('investing_covered_calls', engine, if_exists='append', index=False)
         # Replace old records with new data in the database table
-        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
+        final_merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
         
         
     else:
@@ -172,14 +171,14 @@ def dump_data(df, choice):
             
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
-        merged_df = pd.merge(vl_merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
         # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
         # filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
         
         # Generate unique IDs for the new data in merged_df
-        merged_df['id'] = range(1, len(merged_df) + 1)
-        merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
+        final_merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
         
 def parse_data(html, choice):
     '''Extract the data table'''
