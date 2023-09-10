@@ -65,16 +65,13 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
+        # Fetch the liquidity_unusualvolume merged dataframe
+        vl_merged_df = merged_data()
         try:
-            # Fetch the liquidity_unusualvolume merged dataframe
-            vl_merged_df = merged_data()
             # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
             merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
         except:
-            # Fetch the unusual volume dataframe
-            vl_merged_df = df
-            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+            merged_df = df
 
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
@@ -111,16 +108,13 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
+        # Fetch the liquidity_unusualvolume merged dataframe
+        vl_merged_df = merged_data()
         try:
-            # Fetch the liquidity_unusualvolume merged dataframe
-            vl_merged_df = merged_data()
             # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
             merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
         except:
-            # Fetch the unusual volume dataframe
-            vl_merged_df = df
-            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+            merged_df = df
             
         # Apply the filter rules
         # df=merged_df
@@ -158,16 +152,14 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
         
+        # Fetch the liquidity_unusualvolume merged dataframe
+        vl_merged_df = merged_data()
         try:
-            # Fetch the liquidity_unusualvolume merged dataframe
-            vl_merged_df = merged_data()
             # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
             merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
         except:
-            # Fetch the unusual volume dataframe
-            vl_merged_df = df
             # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+            merged_df = df
             
         # Fetch the overbought oversold merged dataframe
         osb_df = oversold_overbought()
