@@ -163,7 +163,7 @@ def dump_data(df, choice):
         fm_df['id'] = range(1, len(fm_df) + 1)
 
         # Replace old records with new data in the database table
-        fm_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
         
 def parse_data(html, choice):
     '''Extract the data table'''
