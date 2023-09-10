@@ -45,6 +45,8 @@ def dump_data(df, choice):
     engine = create_engine(connection_string)
     Session = sessionmaker(bind=engine)
 
+    osb_df = oversold_overbought()
+    vl_merged_df = merged_data()
     if choice == 'CreditSpreadFile':
         df = pd.read_csv('credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
@@ -65,29 +67,23 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        # Fetch the liquidity_unusualvolume merged dataframe
-        columns_to_keep =['symbol','strategy','type','price','sell_strike','buy_strike','expiry','premium','width','prem_width','rank','earnings_date','comment','on_date','is_active','is_featured']
-        vl_merged_df = merged_data()
+        columns_to_keep_from_df=['symbol','strategy','type','price','sell_strike','buy_strike','expiry','premium','width','prem_width','rank','earnings_date','comment','on_date','is_active','is_featured']
+        # Select the columns you want to keep from 'df'
+        df_selected_columns = df[columns_to_keep_from_df]
         try:
-            # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
-            # merged_df = pd.merge(df, vl_merged_df, on='symbol', how='inner')
-            merged_df = pd.merge(df[columns_to_keep], vl_merged_df[['symbol']], on='symbol', how='inner')
-
+            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
         except:
-            print('No data')
+            print('NO DATA')
+            
+        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
+        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
 
-        # Fetch the overbought oversold merged dataframe
-        osb_df = oversold_overbought()
-        fm_df = pd.merge(merged_df, osb_df, on='symbol', how='inner')
-        # final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
-
-        # df = df[(df['days_to_expire'] >= 12) & (df['rank'] > 30) & (df['rank'] <= 100) & (df['prem_width'] >= 35) & (df['price'] >= 15)]
-        # filtered_df = df[(df['rank'] > 15) & (df['rank'] <= 75) & (df['price'] >= 15)]
-        
         # Generate unique IDs for the new data in merged_df
         fm_df['id'] = range(1, len(fm_df) + 1)
 
-        # merged_df.to_sql('investing_credit_spread', engine, if_exists='append', index=False)
+        # Generate unique IDs for the new data in merged_df
+        fm_df['id'] = range(1, len(fm_df) + 1)
+
         # Replace old records with new data in the database table
         fm_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
@@ -95,7 +91,7 @@ def dump_data(df, choice):
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df.columns = new_columns
-        # df['id'] = df.reset_index().index
+        df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df.rename(columns={'implied_volatility_rank': 'rank'}, inplace=True)
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
@@ -112,25 +108,17 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        # Fetch the liquidity_unusualvolume merged dataframe
-        vl_merged_df = merged_data()
-        columns_to_keep=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','implied_volatility_rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
-        try:
-            # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
-            # merged_df = pd.merge(df, vl_merged_df, on='symbol', how='inner')
-            merged_df = pd.merge(df[columns_to_keep], vl_merged_df[['symbol']], on='symbol', how='inner')
-        except:
-            print('No data')
-            
-        # Apply the filter rules
-        # df=merged_df
-        # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 4) & (df['raw_return'] >= 3.5) & (df['stock_price'] >= 15)]
-        # filtered_df = df [(df['days_to_expire'] >= 21) & (df['rank'] <= 65)]
+        columns_to_keep_from_df=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
         
-        # Fetch the overbought oversold merged dataframe
-        osb_df = oversold_overbought()
-        fm_df = pd.merge(merged_df, osb_df, on='symbol', how='inner')
-        # final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
+        # Select the columns you want to keep from 'df'
+        df_selected_columns = df[columns_to_keep_from_df]
+        try:
+            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
+        except:
+            print('NO DATA')
+            
+        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
+        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
         fm_df['id'] = range(1, len(fm_df) + 1)
@@ -158,27 +146,24 @@ def dump_data(df, choice):
         df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
-        
-        columns_to_keep=['symbol','action','expiry','days_to_expiry','strike_price','earnings_date','stock_price','raw_return','distance_to_strike','comment','on_date','is_active','is_featured']
-        # Fetch the liquidity_unusualvolume merged dataframe
-        vl_merged_df = merged_data()
-        try:
-            # Merge df with vl_merged_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
-        except:
-            # Merge df with unusual_df on 'symbol' to only keep rows that exist in both dataframes
-            merged_df = df
-            
-        # Fetch the overbought oversold merged dataframe
-        osb_df = oversold_overbought()
-        final_merged_df = pd.merge(merged_df,osb_df[['symbol']], on='symbol', how='inner')
 
-        # df = df[(df['days_to_expire'] >= 21) & (df['implied_volatility_rank'] > 50) & (df['implied_volatility_rank'] <= 100) & (df['annualized_return'] >= 65) & (df['stock_price'] > 15)]
-        # filtered_df = df [(df['days_to_expire'] >= 25) & (df['implied_volatility_rank'] > 15) & (df['implied_volatility_rank'] <= 75) & (df['annualized_return'] >= 45) ]
+        columns_to_keep_from_df=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
         
+        # Select the columns you want to keep from 'df'
+        df_selected_columns = df[columns_to_keep_from_df]
+        try:
+            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
+        except:
+            print('NO DATA')
+            
+        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
+        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
+
         # Generate unique IDs for the new data in merged_df
-        final_merged_df['id'] = range(1, len(final_merged_df) + 1)
-        final_merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        fm_df['id'] = range(1, len(fm_df) + 1)
+
+        # Replace old records with new data in the database table
+        fm_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
         
 def parse_data(html, choice):
     '''Extract the data table'''
