@@ -45,7 +45,7 @@ port='5432'
 # USERNAME = os.environ['USERNAME']
 # KEY = os.environ['KEY']
 
-def dump_data(choice='other'):
+def dump_data(choice='CreditSpreadFile'):
     '''Creating Pipeline for Database'''
     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
     engine = create_engine(connection_string)
@@ -53,8 +53,8 @@ def dump_data(choice='other'):
 
     # osb_df = oversold_overbought()
     vl_merged_df = merged_data()
-    new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in vl_merged_df.columns]
-    print("vl_merged_df======>",new_columns)
+    # new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in vl_merged_df.columns]
+    # print("vl_merged_df======>",new_columns)
     if choice == 'CreditSpreadFile':
         df = pd.read_csv('credit_spread.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
@@ -79,7 +79,8 @@ def dump_data(choice='other'):
             
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
-
+        # print("merged_df=====>",merged_df_columns)
+        print(f"Total records in merged_df: {len(merged_df)}")
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
@@ -108,7 +109,8 @@ def dump_data(choice='other'):
             
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
-        
+        # print("merged_df=====>",merged_df_columns)
+        print(f"Total records in merged_df: {len(merged_df)}")
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
@@ -137,7 +139,8 @@ def dump_data(choice='other'):
             
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
-        
+        # print("merged_df=====>",merged_df_columns)
+        print(f"Total records in merged_df: {len(merged_df)}")
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         

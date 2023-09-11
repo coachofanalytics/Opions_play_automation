@@ -215,7 +215,7 @@ def merged_data():
         # Print total records from both files
     # print(f"Total records in unusualvolume.csv: {len(unusual_df)}")
     # print(f"Total records in liquidity.csv: {len(liquidity_df)}")
-    print(f"Total records in osb.csv: {len(osb_df)}")
+    # print(f"Total records in osb.csv: {len(osb_df)}")
     # # print("vl_merged_df_columns====>",vl_merged_df_columns)
     # print(f"Total records in vl_merged_df.csv: {len(vl_merged_df)}")
     # print("merged_df=====>",merged_df_columns)
@@ -225,8 +225,8 @@ def merged_data():
     return filtered_df
 
 
-if __name__ == '__main__':
-    merged_data()
+# if __name__ == '__main__':
+#     merged_data()
     # main_cread_spread()
     # main_shortput()
     # main_covered_calls()
