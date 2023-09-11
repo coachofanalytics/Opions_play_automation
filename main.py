@@ -9,7 +9,7 @@ import subprocess
 import pandas as pd
 import datetime
 import psycopg2
-from utils import merged_data,oversold_overbought
+from utils import merged_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -45,7 +45,6 @@ def dump_data(df, choice):
     engine = create_engine(connection_string)
     Session = sessionmaker(bind=engine)
 
-    osb_df = oversold_overbought()
     vl_merged_df = merged_data()
     if choice == 'CreditSpreadFile':
         df = pd.read_csv('credit_spread.csv')
@@ -67,31 +66,19 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        columns_to_keep_from_df=['symbol','strategy','type','price','sell_strike','buy_strike','expiry','premium','width','prem_width','rank','earnings_date','comment','on_date','is_active','is_featured']
-        # Select the columns you want to keep from 'df'
-        df_selected_columns = df[columns_to_keep_from_df]
-        try:
-            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
-        except:
-            print('NO DATA')
-            
-        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
-        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
-        fm_df['id'] = range(1, len(fm_df) + 1)
-
-        # Generate unique IDs for the new data in merged_df
-        fm_df['id'] = range(1, len(fm_df) + 1)
+        merged_df['id'] = range(1, len(merged_df) + 1)
 
         # Replace old records with new data in the database table
-        fm_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
+        merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df.columns = new_columns
-        df['id'] = df.reset_index().index
+        # df['id'] = df.reset_index().index
         df['implied_volatility_rank'] = df['implied_volatility_rank'].str.replace('%', '').astype('float')
         df.rename(columns={'implied_volatility_rank': 'rank'}, inplace=True)
         df['raw_return'] = df['raw_return'].str.replace('%', '').astype('float')
@@ -108,24 +95,13 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        columns_to_keep_from_df=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
-        
-        # Select the columns you want to keep from 'df'
-        df_selected_columns = df[columns_to_keep_from_df]
-        try:
-            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
-        except:
-            print('NO DATA')
-            
-        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
-        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
-        fm_df['id'] = range(1, len(fm_df) + 1)
+        merged_df['id'] = range(1, len(merged_df) + 1)
 
         # Replace old records with new data in the database table
-        fm_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
-        
+        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
         
     else:
         df = pd.read_csv('shortput.csv')
@@ -147,23 +123,13 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        columns_to_keep_from_df=['symbol','action','expiry','days_to_expiry','strike_price','mid_price','bid_price','ask_price','rank','earnings_date','earnings_flag','stock_price','raw_return','annualized_return','distance_to_strike','comment','on_date','is_active','is_featured']
-        
-        # Select the columns you want to keep from 'df'
-        df_selected_columns = df[columns_to_keep_from_df]
-        try:
-            merged_df = pd.merge(df_selected_columns, vl_merged_df[['symbol']], on='symbol', how='inner')
-        except:
-            print('NO DATA')
-            
-        # Merge 'df_selected_columns' with 'osb_df' using the selected columns
-        fm_df = pd.merge(merged_df[columns_to_keep_from_df], osb_df[['symbol']], on='symbol', how='inner')
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
 
         # Generate unique IDs for the new data in merged_df
-        fm_df['id'] = range(1, len(fm_df) + 1)
+        merged_df['id'] = range(1, len(merged_df) + 1)
 
         # Replace old records with new data in the database table
-        df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
         
 def parse_data(html, choice):
     '''Extract the data table'''
