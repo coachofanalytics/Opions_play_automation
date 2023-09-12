@@ -1,3 +1,4 @@
+print('start')
 import json
 import os
 import pandas as pd
@@ -21,11 +22,18 @@ except KeyError:
 # USERNAME = os.environ['USERNAME']
 # KEY = os.environ['KEY']
 
-host = 'localhost'
-database_name = "CODA_DEV" #os.environ.get('POSTGRES_DB_NAME') 
-user_name = os.environ.get('POSTGRESDB_USER')
-password = os.environ.get('POSTGRESSPASS') 
+# host = 'localhost'
+# database_name = os.environ.get('POSTGRES_DB_NAME') 
+# user_name = os.environ.get('POSTGRESDB_USER')
+# password = os.environ.get('POSTGRESSPASS') 
+# port='5432'
+
+host = os.environ.get('HEROKU_DEV_HOST')
+database_name = os.environ.get('HEROKU_DEV_NAME')
+user_name = os.environ.get('HEROKU_DEV_USER')
+password = os.environ.get('HEROKU_DEV_PASS')
 port='5432'
+
 
 DB_CONFIG = {
     'dbname': database_name,
@@ -35,6 +43,7 @@ DB_CONFIG = {
     'port': port
 }
 
+print('end imports start')
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
@@ -60,9 +69,11 @@ def load_oversolddata_from_db():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM investing_oversold", 
-                       (datetime.now() - timedelta(days=15)))
+        # cursor.execute("SELECT * FROM investing_oversold", 
+        #                (datetime.now() - timedelta(days=15)))
+        cursor.execute("SELECT * FROM investing_overboughtsold")
         data = cursor.fetchone()
+        print("overboughtoversold data from db====>",data)
 
         cursor.close()
         conn.close()
@@ -71,18 +82,14 @@ def load_oversolddata_from_db():
         print(f"Error fetching data failed: {e}")
         return None
 
-
 def read_data_from_csv(csv_file_path):
-    #getting liquidity
     try:
-        # osb_df= pd.read_csv('oversold_overbought_09102023.csv')
         csv_df= pd.read_csv(csv_file_path)
+        csv_df_dict = csv_df.to_dict(orient='records')
     except Exception as e:
         print(f"Error reading data from CSV file: {e}")
         return []
-    csv_df_dict = csv_df.to_dict(orient='records')
     return csv_df,csv_df_dict
-
 
 def save_data_to_db(ticker_symbol, data):
     try:
@@ -95,7 +102,6 @@ def save_data_to_db(ticker_symbol, data):
              quickratio, currentratio, revenuegrowth, fetched_date)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
-
         cursor.execute(
             insert_sql, 
             (
@@ -110,43 +116,11 @@ def save_data_to_db(ticker_symbol, data):
                 datetime.now().date()  # Current date
             )
         )
-
         conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
         print(f"Error saving data to DB for {ticker_symbol}: {e}")
-
-
-def save_oversold_data_to_db(data):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Insert data from CSV file into the Oversold table
-        csv_file_path = 'oversold_overbought_09102023.csv'
-        oversold_data = read_data_from_csv(csv_file_path)[1]
-        print(oversold_data)
-        if oversold_data:
-            insert_oversold_sql = """
-                INSERT INTO investing_oversold
-                (symbol, description, condition)
-                VALUES (%s, %s, %s);
-            """
-            cursor.executemany(
-                insert_oversold_sql,
-                [(item['symbol'], item['description'], item['condition'])
-                for item in oversold_data]
-            )
-            conn.commit()
-            print("Data inserted successfully.")
-        else:
-            print("No valid data found in the CSV file.")
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error saving oversold data: {e}")
 
 
 def fetch_data_util(ticker_symbol):
@@ -162,7 +136,8 @@ def fetch_data_util(ticker_symbol):
             valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth"]
             data = {key: full_data.get(key, None) for key in valuation_keys}
             
-            save_data_to_db(data,ticker_symbol)
+            # save_data_to_db(data,ticker_symbol)
+            save_data_to_db(ticker_symbol, data)
         except Exception as e:
             print(f"Error fetching data from yfinance for {ticker_symbol}: {e}")
             return {}
@@ -178,7 +153,7 @@ def fetch_oversold_util():
         try:
             csv_file_path_osb='oversold_overbought_09102023.csv'
             data= read_data_from_csv(csv_file_path_osb)[0]
-            save_oversold_data_to_db(data)
+            # save_oversold_data_to_db(data)
 
         except Exception as e:
             print(f"Error fetching data from yfinance : {e}")
@@ -196,7 +171,6 @@ def merged_data():
     unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
     osb_df = read_data_from_csv(csv_file_path_osb)[0]
-    # osb_df_v2 = db_data
 
     vl_merged_df = pd.merge(unusual_df,liquidity_df [['symbol']], on='symbol', how='inner')
 
@@ -206,7 +180,7 @@ def merged_data():
     merged_df['ebitda'] = merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
 
     # Filter out symbols where EBITDA <= 0
-    positive_ebitda_df = merged_df[merged_df['ebitda'] > 0]
+    positive_ebitda_df = merged_df[merged_df['ebitda'] > -200000]
 
     # Apply other filters
     # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
@@ -219,14 +193,14 @@ def merged_data():
     # # print("vl_merged_df_columns====>",vl_merged_df_columns)
     # print(f"Total records in vl_merged_df.csv: {len(vl_merged_df)}")
     # print("merged_df=====>",merged_df_columns)
-    # print(f"Total records in merged_df: {len(merged_df)}")
-    # print(f"Total records in positive_ebitda_df: {len(positive_ebitda_df)}")
+    print(f"Total records in merged_df: {len(merged_df)}")
+    print(f"Total records in positive_ebitda_df: {len(positive_ebitda_df)}")
     # print(f"Total records in filtered_df with +ve ebitda: {len(filtered_df)}")
     return filtered_df
 
 
-# if __name__ == '__main__':
-#     merged_data()
+if __name__ == '__main__':
+    merged_data()
     # main_cread_spread()
     # main_shortput()
     # main_covered_calls()
