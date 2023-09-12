@@ -21,7 +21,6 @@ database_name = os.environ['DATABASE']
 USERNAME = os.environ['USERNAME']
 KEY = os.environ['KEY']
 
-
 DB_CONFIG = {
     'dbname': database_name,
     'user': user_name,
@@ -48,22 +47,7 @@ def load_data_from_db(ticker_symbol):
     except Exception as e:
         print(f"Error fetching data from DB for {ticker_symbol}: {e}")
         return None
-    
-def load_oversolddata_from_db():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM investing_overboughtsold")
-        data = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-        return data
-    except Exception as e:
-        print(f"Error fetching data failed: {e}")
-        return None
-
+   
 def read_data_from_csv(csv_file_path):
     try:
         csv_df= pd.read_csv(csv_file_path)
@@ -72,7 +56,6 @@ def read_data_from_csv(csv_file_path):
         print(f"Error reading data from CSV file: {e}")
         return []
     return csv_df,csv_df_dict
-
 
 def save_data_to_db(ticker_symbol, data):
     try:
@@ -107,22 +90,6 @@ def save_data_to_db(ticker_symbol, data):
     except Exception as e:
         print(f"Error saving data to DB for {ticker_symbol}: {e}")
 
-def fetch_oversold_util():
-    db_data = load_oversolddata_from_db()
-    
-    if db_data:
-        columns = ["symbol"]
-        data = dict(zip(columns, db_data))
-    else:
-        try:
-            csv_file_path_osb='oversold_overbought_09102023.csv'
-            data= read_data_from_csv(csv_file_path_osb)[0]
-            # save_oversold_data_to_db(data)
-
-        except Exception as e:
-            print(f"Error fetching data from yfinance : {e}")
-            return {}
-    return data
 
 def fetch_data_util(ticker_symbol):
     db_data = load_data_from_db(ticker_symbol)
@@ -145,24 +112,19 @@ def fetch_data_util(ticker_symbol):
 
 
 def merged_data():
-    db_data = fetch_oversold_util()
     # Merge liquidity and unusual volume
     csv_file_path_uv='unusual_volume.csv'
     csv_file_path_lq='liquidity.csv'
-    csv_file_path_osb='oversold_overbought_09102023.csv'
     unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
-    osb_df = db_data #read_data_from_csv(csv_file_path_osb)[0]
 
     vl_merged_df = pd.merge(unusual_df,liquidity_df [['symbol']], on='symbol', how='inner')
 
-    merged_df = pd.merge(vl_merged_df, osb_df[['symbol']], on='symbol', how='inner')
-
     # Fetch EBITDA for each symbol in unusual_df
-    merged_df['ebitda'] = merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
+    vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
 
     # Filter out symbols where EBITDA <= 0
-    positive_ebitda_df = merged_df[merged_df['ebitda'] > -300000]
+    positive_ebitda_df = vl_merged_df[vl_merged_df['ebitda'] > -300000]
 
     # Apply other filters
     # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
