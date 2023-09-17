@@ -46,8 +46,8 @@ def dump_data(df, choice,vl_merged_df):
     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
     engine = create_engine(connection_string)
     Session = sessionmaker(bind=engine)
-    vl_merged_df = merged_data()
-    
+    # vl_merged_df = merged_data()
+
     if choice == 'CreditSpreadFile':
         csv_file_path  = 'credit_spread.csv'
         try:

@@ -132,7 +132,7 @@ def merged_data():
 
     return positive_ebitda_df
 
-def process_data(df,vl_merged_df,):
+def process_data(df,vl_merged_df):
     new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
     df.columns = new_columns
     df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
