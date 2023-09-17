@@ -131,3 +131,15 @@ def merged_data():
     # filtered_df = positive_ebitda_df
 
     return positive_ebitda_df
+
+def process_data(df,vl_merged_df,):
+    new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
+    df.columns = new_columns
+    df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
+    df['comment'] = ' '
+    df['on_date'] = ' '
+    df['is_active'] = True
+    df['is_featured'] = True
+    merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+    merged_df['id'] = range(1, len(merged_df) + 1)
+    return merged_df
