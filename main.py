@@ -40,6 +40,41 @@ USERNAME = os.environ['USERNAME']
 KEY = os.environ['KEY']
 
 
+# def dump_data(df, choice):
+#     '''Creating Pipeline for Database'''
+#     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
+#     engine = create_engine(connection_string)
+#     Session = sessionmaker(bind=engine)
+#     vl_merged_df = merged_data()
+
+#     if choice == 'CreditSpreadFile':
+#         csv_file_path  = 'credit_spread.csv'
+#         try:
+#             df=read_data_from_csv(csv_file_path)[0]
+#         except:
+#             print('No Report is available')
+#         merged_df=process_data(df,vl_merged_df)
+#         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
+
+#     elif choice == 'coveredCalls':
+#         csv_file_path  = 'covered_calls.csv'
+#         try:
+#             df=read_data_from_csv(csv_file_path)[0]
+#         except:
+#             print('No Report is available')
+#         merged_df=process_data(df,vl_merged_df)
+#         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
+
+#     else:
+#         csv_file_path  = 'shortput.csv'
+#         try:
+#             df=read_data_from_csv(csv_file_path)[0]
+#         except:
+#             print('No Report is available')
+#         merged_df=process_data(df,vl_merged_df)
+#         merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+
+
 def dump_data(df, choice):
     '''Creating Pipeline for Database'''
     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
@@ -48,87 +83,54 @@ def dump_data(df, choice):
     vl_merged_df = merged_data()
 
     if choice == 'CreditSpreadFile':
-        csv_file_path  = 'credit_spread.csv'
+        # df = pd.read_csv('credit_spread.csv')
+        csv_file_path = 'credit_spread.csv'
         try:
             df=read_data_from_csv(csv_file_path)[0]
         except:
             print('No Report is available')
-        merged_df=process_data(df,vl_merged_df)
+        new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
+        df.columns = new_columns
+        df.rename(columns={'iv_rank': 'rank'}, inplace=True)
+        df['rank'] = df['rank'].str.replace("%", "").astype(float)
+        df['price'] = df['price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+
+        # Replace old records with new data in the database table
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
-
-    elif choice == 'coveredCalls':
-        csv_file_path  = 'covered_calls.csv'
-        try:
-            df=read_data_from_csv(csv_file_path)[0]
-        except:
-            print('No Report is available')
-        merged_df=process_data(df,vl_merged_df)
-        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
-
-    else:
-        csv_file_path  = 'shortput.csv'
-        try:
-            df=read_data_from_csv(csv_file_path)[0]
-        except:
-            print('No Report is available')
-        merged_df=process_data(df,vl_merged_df)
-        merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
-
-# def dump_data(df, choice,vl_merged_df):
-#     '''Creating Pipeline for Database'''
-#     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
-#     engine = create_engine(connection_string)
-#     Session = sessionmaker(bind=engine)
-    
-#     if choice == 'CreditSpreadFile':
-#         # df = pd.read_csv('credit_spread.csv')
-#         csv_file_path = 'credit_spread.csv'
-#         try:
-#             df=read_data_from_csv(csv_file_path)[0]
-#         except:
-#             print('No Report is available')
-#         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
-#         df.columns = new_columns
-#         df.rename(columns={'iv_rank': 'rank'}, inplace=True)
-#         df['rank'] = df['rank'].str.replace("%", "").astype(float)
-#         df['price'] = df['price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
-
-#         # Replace old records with new data in the database table
-#         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
-#     elif choice == 'coveredCalls':
-#         df = pd.read_csv('covered_calls.csv')
-#         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
-#         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
-#         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
-#         df['comment'] = 'comment'
-#         df['on_date'] = ' '
-#         df['is_active'] = True
-#         df['is_featured'] = True
-#         merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
-#         # Generate unique IDs for the new data in merged_df
-#         merged_df['id'] = range(1, len(merged_df) + 1)
+    elif choice == 'coveredCalls':
+        df = pd.read_csv('covered_calls.csv')
+        new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
+        df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+        df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
+        df['comment'] = 'comment'
+        df['on_date'] = ' '
+        df['is_active'] = True
+        df['is_featured'] = True
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        # Generate unique IDs for the new data in merged_df
+        merged_df['id'] = range(1, len(merged_df) + 1)
 
-#         # Replace old records with new data in the database table
-#         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
-#     else:
-#         df = pd.read_csv('shortput.csv')
-#         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
-#         df.columns = new_columns
-#         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
-#         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)
-#         df['comment'] = ' '
-#         df['on_date'] = ' '
-#         df['is_active'] = True
-#         df['is_featured'] = True
+        # Replace old records with new data in the database table
+        merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
+    else:
+        df = pd.read_csv('shortput.csv')
+        new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
+        df.columns = new_columns
+        df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+        df['expiry'] = pd.to_datetime(df['expiry'], utc=True)
+        df['comment'] = ' '
+        df['on_date'] = ' '
+        df['is_active'] = True
+        df['is_featured'] = True
 
-#         merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
 
-#         # Generate unique IDs for the new data in merged_df
-#         merged_df['id'] = range(1, len(merged_df) + 1)
+        # Generate unique IDs for the new data in merged_df
+        merged_df['id'] = range(1, len(merged_df) + 1)
 
-#         # Replace old records with new data in the database table
-#         merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
+        # Replace old records with new data in the database table
+        merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
 
 
 
