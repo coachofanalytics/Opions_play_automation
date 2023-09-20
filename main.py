@@ -80,11 +80,11 @@ def dump_data(df, choice):
     connection_string = f'postgresql://{user_name}:{password}@{host}:{port}/{database_name}'
     engine = create_engine(connection_string)
     Session = sessionmaker(bind=engine)
-    vl_merged_df = merged_data()
 
     if choice == 'CreditSpreadFile':
         # df = pd.read_csv('credit_spread.csv')
         csv_file_path = 'credit_spread.csv'
+        vl_merged_df = merged_data()
         try:
             df=read_data_from_csv(csv_file_path)[0]
         except:
@@ -99,6 +99,7 @@ def dump_data(df, choice):
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
+        vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
@@ -114,6 +115,7 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
+        vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
