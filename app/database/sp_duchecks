@@ -1,0 +1,295 @@
+USE [Tableau]
+GO
+/****** object: StoredProcedure [dbo].[rpt_Email_DUImageChecks_Daily]	Script Date;6/8/2017 8:45:35 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER proc [dbo].[rpt_Email_DUImageChecks_Daily]
+		@sendTest bit = 0
+AS
+BEGIN
+
+SET NOCOUNT ON;
+/*
+exec [rpt_Email_DUImageChecks_Daily_test] 1
+*/
+IF datepart(hh,getdate()) > 10 --after 10am
+		SET @sendTest = --only send test email with the first check of the day 
+		
+DECLARE @tblDUChecksDetail table (
+				Col_CID bigint,
+				Col_PID bigint,
+				Col_UDE datetime,
+				Col_DIC int,
+				Col_BIC int,
+				Col_PIC int,
+				Col_PPC int,
+				Col_PICAdj int,
+				Col_DS varchar(50),
+				Col_DR datetime,
+				Col_IS tinyint,
+				Col_ACM int,
+				)
+				
+DECLARE			@tableHTML varchar(max),
+				@tableHTMLInner varchar(max),
+				@subject varchar(200),
+				@to varchar(1000),
+				@cc varchar(1000)
+				
+SET @subject = 'DIRECT UPLOAD IMAGE CHECK ALART - ' + CONVERT(VARCHAR(10),getdate(),101)
+
+INSERT @tblDUChecksDetail (Col_CID,
+	   Col_PID,
+	   Col_UDE,
+	   Col_DIC,
+	   Col_BIC,
+	   Col_PIC,
+	   Col_PPC,
+	   Col_PICAdj,
+	   Col_DS,
+	   Col_DR,
+	   Col_IS,
+	   Col_ACM)
+SELECT Col_CID,
+	   Col_PID,
+	   Col_UDE,
+	   Col_DIC,
+	   Col_BIC,
+	   Col_PIC,
+	   Col_PPC,
+	   Col_PICAdj,
+	   Col_DS,
+	   Col_DR,
+	   Col_IS,
+	   Col_ACM,
+FROM OPENQUERY([JP1956195Q005],*
+WITH tmpBatch (CMPBatchID, LogDate, Col_CF, DirectuploadConfirmationID, Col_BIC, Col_PPC, AddedPageCount, BPOAdjImageCount, Col_ACM)
+AS
+( --Get all the pertinent values from the BPO server for the past 7 days
+		SELECT CMPBatchID, LogDate, Col_CF, DirectuploadConfirmationID, Col_BIC, Col_PPC, AddedPageCount, BPOAdjImageCount,
+		FROM OPENQUERY([VAJVLSQL1\PROD],''
+		SELECT b.CMPBatchID, b.LogDate,
+		V.Col_CF,
+		b.DirectUploadConfirmationID,
+		ISNULL(b.GoodPageCount,b.TotalBatchPages) as Col_BIC,
+		ISNULL(bp.Col_PPC,0) as Col_PPC,
+		ISNULL(ap.AddedImages,0) as AddedPageCount,
+		ISNULL(b.GoodPageCount,b.TotalBatchPages) + ISNULL(ap.AddedImages,0) - ISNULL(bp.Col_PPC,0) as BPOAdjImageCount,
+		--tc.CntDocuments, tc.CntDocsComplete,
+		--COALESCE(tc.DateFirstDocCompleted, b.LastTimeCurrentStageChanged, b.LogDate) as ActivityCheckDate,
+		CASE WHEN tc.CntDocuments > tc.CntDocsComplete THEN
+DATEDIFF(mi,tc.DateFirstDocCompleted,GETDATE()) ELSE 0 END as Col_ACM
+	FROM DB1956.dbo.tbCMPBatch b (nolock)
+	INNER JOIN DB1956.dbo.tbCMPVeteran v (nolock) ON b.CMPBatchID = v.CMPBatchID
+	LEFT JOIN (
+			SELECT d.CMPBatchID, count(1) as G
+			FROM DB1956.dbo.tbCMPDo d (nolock)
+			INNER JOIN DB1956.dbo.tbCMPImage i (nolock) ON d.CMPDoID = i.CMPDoID
+			WHERE i.PageNumber > 2 and i.validBack = 0
+			GROUP BY d.CMPBatchID
+	) bp ON b.CMPBatchID = bp.CMPBatchID
+	LEFT JOIN (
+			SELECT d.CMPBatchID, count(1)-1 as AddedImages
+			FROM DB1956.dbo.tbCMPDocument d (nolock)
+			INNER JOIN DB1956.dbo.tbCMPImage i (nolock) ON d.CMPDocumentID = i.CMPDocumentID
+			WHERE i.isEnvelope = 1
+			GROUP BY d.CMPBatchID
+			Having count(*) > 1
+	) ap ON b.CMPBatchID = ap.CMPBatchID
+	LEFT JOIN (
+			SELECT d.CMPBatchID, count(1) as CntDocuments,
+			SUM(CASE WHEN CurrentStageID = 70 THEN 1 ELSE 0 END) AS CntDocsComplete,
+			MIN(d.EffectiveTATDateTime) AS DateFirstDocCompleted
+			FROM DB1956.dbo.tbCMPDocument d (nolock)
+			GROUP BY d.CMPBatchID
+	) tc ON b.CMPBatchID = tc.CMPBatchID
+			WHERE b.CMPSourceID = 5 AND b.LogDate > DATEADD(DD,-7,GETDATE())
+			AND b.DirectuploadConfirmationID is not null
+			'')
+			
+	), tmpCountComp (CMPBatchID,
+			LogDate,
+			Col_BIC,
+			Col_PIC,
+			Col_PIC)
+			
+	AS ( --Gather and join the related batch-level counts from the Collybus/DMHS portal
+	
+			SELECT b.CMPBatchID,
+				   B.LogDate as LogDate,
+				   b.Col_BIC as Col_BIC,
+				   sum(dc.ImageCount) as Col_PIC,
+				   b.Col_PPC
+			FROM tmpBatch b
+			INNER JOIN (
+					SELECT da.ParentDocumID, SUM(df.PageCount) as ImageCount
+					FROM CMPCollybus.dbo.DocumentAssociations da (nolock)
+					INNER join CMPCollybus.dbo.AllDocuments dp (nolock) ON da.ParentDocumentID = dp.DocumentID
+					INNER JOIN CMPCollybus.dbo.AllDocuments d (nolock) ON da.AssocDocumentID = d.DocumentID
+					INNER JOIN CMPCollybus.dbo.DocumentVersions dv (nolock) ON d.DocumentID = dv.DocumentID
+							AND dv.VersionNumber = 1 AND dv.CreatedBy IN (1,2) --Only count the original Documents prior to split: Version 1 and created by the system
+					INNER JOIN CMPCollybus.dbo.Alldiskfiles df (nolock) ON dv.DiskFileID = df.DiskFileID
+					WHERE d.deleted = 0 and d.DocTypedID = 1
+					GROUP BY da.ParentDocumentID
+			) dc ON b.CollybusFileID = dc.ParentDocumentID
+			GROUP BY b.CMPBatchID, b.LogDate, b.Col_BIC, b.Col_PPC
+			
+	), tmpDUCounts (CMPBatchID,
+			Col_CID,
+			OriginalImageCount,
+			isReliable)
+			
+	AS ( --Gather the original counts from the direct upload records
+	
+			SELECT b.CMPBatchID,
+			du.CollybusFileID as Col_CID,
+			MAX(dc.ImageCount) as OriginalImageCount,
+			MAX(CASE WHEN dc.CntReliableDocs = dc.CntDocs THEN 1 else 0 end) as isReliable
+			FROM [CMPCollybusCustom].[dbo].[tbDirectUploadRequest] du (nolock)
+			INNER JOIN CMPCo.dbo.AllDocuments dp (nolock) ON du.CollybusFileID = dp.DocumentID
+			LEFT JOIN (
+							SELECT da.ParentDocumentID,
+							SUM(CASE WHEN df.MimeType like (" "%/jp%g%'') THEN 1 ELSE ISNULL(df.PageCount,0) END as ImageCount,
+							SUM(CASE WHEN df.MimeType like (" "%/pdf%'') or df.MimeType like (" "%/tif%'') or df.MimeType like (''%/jp%g%'') THEN 1 ELSE 0 END) AS CntReliableDocs,
+							COUNT(*) AS CntDocs
+							FROM CMPCollybus.dbo.DocumentAssociations da (nolock)
+							left join CMPCollybus.dbo.AllDocuments d (nolock) ON da.AssocDocumentID = d.DocumentID
+							left join CMPCollybus.dbo.alldiskfiles df (nolock) ON d.DiskFileID = df.DiskFileID
+							group by da.ParentDocumID
+					) dc ON dp.DocumentID = dc.ParentDocumID
+				INNER JOIN tmpBatch b (nolock) ON dp.DocumentID = b.DirectuploadConfirmationID
+				GROUP BY b.CMPBatchID, du.CollybusFileID
+				
+		)
+		
+		SELECT --b.CMPBatchID,
+				du.Col_CID as Col_CID,
+				dp.VeteranID as Col_PID,
+				b.LogDate as Col_UDE,
+				CASE WHEN du.isReliable = 1 THEN du.OriginalImageCount ELSE b.Col_BIC END as Col_DIC,
+				b.Col_BIC as Col_BIC,
+				dc.ImageCount as Col_PIC,
+				b.Col_PPC,
+				dc.ImageCount + b.Col_PPC as Col_PICAdj,
+				st.Value as Col_DS,
+				dp.DateCompleted as Col_DR,
+				CASE WHEN ISNULL(spt.DocumentID,0) > 0 THEN 1 ELSE 0 END AS I,
+				b.Col_ACM
+		 FROM tmpBatch b
+		 LEFT JOIN CMPCollybus.dbo.AllDocuments, dp (nolock) ON b.CollybusFileID = dp.DocumentID
+		 LEFT JOIN (
+				SELECT da.ParentDocumentID, SUM(df.PageCount) as ImageCount
+				FROM CMPCollybus.dbo.DocumentAssociations, da (nolock)
+				INNER join CMPCollybus.dbo.AllDocuments dp (nolock) ON da.ParentDocumentID = dp.DocumentID
+				INNER join CMPCollybus.dbo.AllDocuments d (nolock) ON da.AssocDocumentID = d.DocumentID
+				INNER JOIN CMPCollybus.dbo.DocumentVersions dv (nolock) ON d.DocumentID = dv.DocumentID
+						AND dv.VersionNumber = 1 AND dv.CreatedBy IN (1,2) --Only count the original Documents prior to split:  Version 1 and created by the system
+				INNER join CMPCollybus.dbo.alldiskfiles df (nolock) ON dv.DiskFileID = df.DiskFileID
+				WHERE d.deleted = 0 and d.DocTypedID = 1
+				GROUP BY da.ParentDocumentID
+		) dc ON dp.DocumentID = dc.ParentDocumentID
+		LEFT JOIN CMPCollybus.dbo.LookupTableValues st (nolock) ON dp._Status = st.LookupTableValueID
+		LEFT JOIN tmpDUCounts du ON du.Col_CID = b.DirectuploadConfirmationID
+		LEFT JOIN CMPCollybus.dbo.VW QueTaskAll spt ON dp.DocumentID = spt.DocumentID AND spt.QueueID =11
+		WHERE dp.DocTypedID = 2 and dp.deleted = 0
+		AND b.CMPBatchID in (
+				select tcc.CMPBatchID
+				from tmpCountComp tcc
+				inner join tmpDUCounts tdu ON tcc.CMPBatchID = tdu.CMPBatchID
+				where CASE WHEN tdu.isReliable = 1 THEN tdu.OriginalImageCount ELSE tcc.BPMImageCount END
+						!= (tcc.Col_PIC + tcc.Col_PPC)
+						
+		)
+		AND (b.Col_ACM = 0 OR b.Col_ACM > 240)
+		ORDER BY b.CMPBatchID. dp. VeteranID
+		)
+		
+		--SELECT * --Col_CID, Col_PID, Col_UDE, Col_DIC, Col_PICAdj
+		--from @tblDUCkecksDetail
+		--RETURN
+
+		IF EXISTS(SELECT 1 FROM @tblDUCkecksDetail) or @sendTest = 1
+		BEGIN
+
+				--print 'create email'
+	
+				IF EXISTS(SELECT 1 FROM @tblDUCkecksDetail)
+				BEGIN
+						SET @tableHTML =
+						N'<H3>' + @subject + '</H3>' +
+						N'<table border="0" width="600px">' +
+						N'<tr><td>Received image count does not match the final image count...</td></tr>' +
+						N'<tr><td>All mismatches for past 7 days.</td></tr>' +
+						N'<tr>[HTMLINNER]</tr></table>'
+			
+						SET @tableHTMLInner =
+						N'<table border="1" cellspacing="1" style="background-color:#000033;font- family:Arial;font-size:9pt">' +
+						N'<tr><th nowrap="true" align="right">Confirmation ID</th><th nowrap="true" align="right">Packet ID</th>
+								<th nowrap="true">Date Uploaded</th><th nowrap="true" align="right">Uploaded Image Count</th><th nowrap="true" align="right">Final Image Count</th><th nowrap="true" align="right">Minutes in BPO</th></tr>' +
+						CAST ( (
+						SELECT td = ISNULL(cast(Col_CID as varchar(20)),''),'',
+						td = ISNULL(cast(Col_PID as varchar(20)),''),'',
+						td = convert(varchar(30),Col_UDE,120),'',
+						td = ISNULL(cast(Col_DIC as varchar(20)),''),'',
+						td = ISNULL(cast(Col_PICAdj as varchar(20)),''),'',
+						td = CASE WHEN ActivityCheckMinutes = 0 THEN 'Complete' ELSE
+			ISNULL(cast(ActivityCheckMinutes as varchar(20)),'') END
+						FROM @tblDUCkecksDetail
+						FOR XML PATH('tr'), TYPE
+						) AS NVARCHAR(MAX) ) +
+						N'</table>'
+					
+						SET @tableHTML = REPLACE@tableHTML,'[HTMLINNER]',@tablrHTMLInner)
+				END 
+				ELSE
+				BEGIN
+						SET @tableHTML =
+						N'<H3>' + @subject + '</H3>' +
+						N'<table border="0" width="600px">' +
+						N'<tr><td>There have been no direct upload image discrepancies for the past 7 days,</td></tr>' +
+						N'</table>'
+				END
+			
+				SET @tableHTML = REPLACE(ISNULL(@tableHTML,''),'''',''')
+				If 1=0 --For testing
+				BEGIN
+						set  @to= 'lawrence.e.lensmith@leidos.com;'
+						set @cc = ''
+				END 
+				ELSE
+				BEGIN
+						set  @to =
+			'valerie.tischer@lmco.com;david.r.utley@lmco.com;ssonecha@sescorporation.com;swalia@sescorporation.com;chad.davidson@lmco.com;william.eubank@leidos.com'
+						set @cc= 'VASupportTeam@datadimensions.com'
+				END
+			
+				EXEC send_AdminMail_query
+				@to = @to,
+				@cc = @cc,
+				@bcc = 'lawrence.e.lensmith@leidos.com',
+				@subject = @subject,
+				@body =@tableHTML,
+				@body format = 'HTML'
+				--,@file attachments = @filenameattach1
+				--,@query = @emailquery
+				--,@attach query result as file = 1
+				--@query attachments filename = 'TESTFILE.CSV',
+				--@query result header = 1
+				--,@query result width
+				--,@query result separator =','
+				--,@exclude query output
+	
+		END
+		END
+	
+		/*
+	
+		*/|
+
+			
+			
+
+		
+		

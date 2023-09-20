@@ -1,0 +1,551 @@
+	WITH XREF AS (
+		SELECT 'Col_P_irm_mv' AS metric UNION ALL
+		SELECT 'Col_P_irm_mv_prev' AS metric UNION ALL
+		SELECT 'Col_P_irm_mv_usd' AS metric UNION ALL
+		SELECT 'Col_P_irm_mv_usd_prev' AS metric UNION ALL
+		SELECT 'Col_A_var_99_monthly' AS metric UNION ALL
+		SELECT 'Col_A_es_99_monthly' AS metric UNION ALL
+		SELECT 'Col_A_var_99_monthly_prev' AS metric UNION ALL
+		SELECT 'Col_A_es_99_monthly_prev' AS metric UNION ALL
+		SELECT 'Col_P_var_99_monthly' AS metric UNION ALL
+		SELECT 'Col_B_var_99_monthly' AS metric UNION ALL
+		SELECT 'Col_P_es_99_monthly' AS metric UNION ALL
+		SELECT 'Col_B_es_99_monthly' AS metric UNION ALL
+		SELECT 'Col_P_oad' AS metric UNION ALL
+		SELECT 'Col_B_oad' AS metric UNION ALL
+		SELECT 'Col_A_oad' AS metric UNION ALL
+		SELECT 'Col_A_oad_prev' AS metric UNION ALL
+		SELECT 'Col_P_oasd' AS metric UNION ALL
+		SELECT 'Col_B_oasd' AS metric UNION ALL
+		SELECT 'Col_A_oasd' AS metric UNION ALL
+		SELECT 'Col_A_oasd_prev' AS metric UNION ALL
+		SELECT 'Col_P_dts' AS metric UNION ALL
+		SELECT 'Col_B_dts' AS metric UNION ALL
+		SELECT 'Col_A_dts' AS metric UNION ALL
+		SELECT 'Col_A_dts_prev' AS metric UNION ALL
+		SELECT 'Col_P_lcs' AS metric UNION ALL
+		SELECT 'Col_B_lcs' AS metric UNION ALL
+		SELECT 'Col_A_lcs' AS metric UNION ALL
+		SELECT 'Col_A_lcs_prev' AS metric 
+	),
+	Col_C_Col_V AS (
+		SELECT rpb.*
+		FROM vwc_rdm_Col_P_Col_V rpb
+		INNER JOIN dim_rdm_Col_V rpb
+		ON (rpb.rdm_Col_V_base_id = drb.rdm_Col_V_base_id
+		AND drb.engine_name IN ('FI')--, 'Aladdin')
+		AND rpb.engine_asof_calendar_date IN (TO_DATE('13-02-2018','DD-MM-YYYY'), TO_DATE('6-10-2017','DD-MM-YYYY')))
+		LIMIT ALL
+	),
+	PORT_FACT_Col_C AS (
+		SELECT
+			frp.rdm_Col_P_src_base_id,
+			frp.rdm_Col_B_src_base_id,
+			frp.rdm_Col_M_src_base_id,
+			frp.rdm_Col_V_base_id,
+			frp.rdm_Col_C_src_base_id,
+			frp.engine_asof_calendar_date,
+			frp.Col_P_irm_market_value,
+			frp.Col_P_irm_market_value_used,
+			frp.Col_A_var_99_monthly,
+			frp.Col_A_es_99_monthly,
+			frp.Col_P_var_99_monthly,
+			frp.Col_B_var_99_monthly,
+			frp.Col_P_es_99_monthly,
+			frp.Col_B_es_99_monthly,
+			frp.Col_P_oad,
+			frp.Col_B_oad,
+			frp.Col_A_oad,
+			frp.Col_P_oasd,
+			frp.Col_B_oasd,
+			frp.Col_A_oasd,
+			frp.Col_P_dts,
+			frp.Col_B_dts,
+			frp.Col_A_dts,
+			frp.Col_P_lcs,
+			frp.Col_B_lcs,
+			frp.Col_A_lcs,
+		FROM Col_C_Col_V rpb
+		INNER JOIN fct_rdm_Col_P frp
+		ON (rpb_rdm_Col_P_src_base_id = frp.rdm_Col_P_src_base_id
+		AND rpb.rdm_Col_B_src_base_id = frp.rdm_Col_B_src_base_id
+		AND rpb.rdm_Col_M_src_base_id = frp.rdm_Col_M_src_base_id
+		AND rpb.rdm_Col_V_base_id = frp.rdm_Col_V_base_id
+		AND rpb.rdm_Col_C_src_base_id = frp.rdm_Col_C_src_base_id
+		AND rpb.engine_asof_calendar_date = frp.engine_asof_calendar_date )
+		WHERE rpb.engine_asof_calendar_date = TO_DATE('13-02-2018','DD-MM-YYYY')
+	),
+	PORT_FACT_PREV AS (
+		SELECT
+			frp.rdm_Col_P_src_base_id,
+			frp.rdm_Col_B_src_base_id,
+			frp.rdm_Col_M_src_base_id,
+			frp.rdm_Col_V_base_id,
+			frp.rdm_Col_C_src_base_id,
+			frp.engine_asof_calendar_date,
+			frp.Col_P_irm_market_value,
+			frp.Col_P_irm_market_value_used,
+			frp.Col_A_var_99_monthly,
+			frp.Col_A_es_99_monthly,
+			frp.Col_A_oad,
+			frp.Col_A_oasd,
+			frp.Col_A_dts,
+			frp.Col_A_lcs,
+		FROM Col_C_Col_V rpb
+		INNER JOIN fct_rdm_Col_P frp
+		ON (rpb.rdm_Col_P_src_base_id = frp.rdm_Col_P_src_base_id
+		AND rpb.rdm_Col_B_src_base_id = frp.rdm_Col_B_src_base_id
+		AND rpb.rdm_Col_M_src_base_id = frp.rdm_Col_M_src_base_id
+		AND rpb.rdm_Col_V_base_id = frp.rdm_Col_V_base_id
+		AND rpb.rdm_Col_C_src_base_id = frp.rdm_Col_C_src_base_id
+		AND RPB.engine_asof_calendar_date = frp.engine_asof_calendar_date )
+		WHERE rpb.engine_asof_calendar_date = TO_DATE('6-10-2017','DD-MM-YYYY')
+	),
+	PORT_FACT AS (
+	SELECT
+		frpc.rdm_Col_P_src_base_id,
+		frpc.rdm_Col_B_src_base_id,
+		frpc.rdm_Col_M_src_base_id,
+		frpc.rdm_Col_V_base_id,
+		frpc.rdm_Col_C_src_base_id,
+		frpc.engine_asof_calendar_date,
+		CASE xref.metric
+			WHEN 'Col_P_irm_mv' THEN ''
+			WHEN 'Col_P_irm_mv_prev' THEN ''
+			WHEN 'Col_P_irm_mv_usd' THEN ''
+			WHEN 'Col_P_irm_mv_usd_prev' THEN ''
+			WHEN 'Col_A_var_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_A_es_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_A_var_99_monthly_prev' THEN '(bps/Mon)'
+			WHEN 'Col_A_es_99_monthly_prev' THEN '(bps/Mon)'
+			WHEN 'Col_P_var_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_B_var_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_P_es_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_B_es_99_monthly' THEN '(bps/Mon)'
+			WHEN 'Col_P_oad' THEN '(Yrs)'
+			WHEN 'Col_B_oad' THEN '(Yrs)'
+			WHEN 'Col_A_oad' THEN '(Yrs)'
+			WHEN 'Col_A_oad_prev' THEN '(Yrs)'
+			WHEN 'Col_P_oasd' THEN '(Yrs)'
+			WHEN 'Col_B_oasd' THEN '(Yrs)'
+			WHEN 'Col_A_oasd' THEN '(Yrs)'
+			WHEN 'Col_A_oasd_prev' THEN '(Yrs)'
+			WHEN 'Col_P_dts' THEN '(% * Yrs)'
+			WHEN 'Col_B_dts' THEN '(% * Yrs)'
+			WHEN 'Col_A_dts' THEN '(% * Yrs)'
+			WHEN 'Col_A_dts_prev' THEN '(% * Yrs)'
+			WHEN 'Col_P_lcs' THEN '(%)'
+			WHEN 'Col_B_lcs' THEN '(%)'
+			WHEN 'Col_A_lcs' THEN '(%)'
+			WHEN 'Col_A_lcs_prev' THEN '(%)'
+		END AS units,
+		CASE xref.metric
+			WHEN 'Col_P_irm_mv' THEN frpc.Col_P_irm_market_value / 1e6
+			WHEN 'Col_P_irm_mv_prev' THEN (frpc.Col_P_irm_market_value - frpp.Col_P_irm_market_value) / 1e6
+			WHEN 'Col_P_irm_mv_usd' THEN frpc.Col_P_irm_market_value_usd / 1e6
+			WHEN 'Col_P_irm_mv_usd_prev' THEN (frpc.Col_P_irm_market_value_usd - frpp.Col_P_irm_market_value_usd) / 1e6
+			WHEN 'Col_A_var_99_monthly' THEN frpc.Col_A_var_99_monthly
+			WHEN 'Col_A_es_99_monthly' THEN frpc.Col_A_es_99_monthly
+			WHEN 'Col_A_var_99_monthly_prev' THEN frpc.Col_A_var_99_monthly - frpp.Col_A_var_99_monthly
+			WHEN 'Col_A_es_99_monthly_prev' THEN frpc.Col_A_es_99_monthly - frpp.Col_A_es_99_monthly 
+			WHEN 'Col_P_es_99_monthly' THEN frpc.Col_P_var_99_monthly
+			WHEN 'Col_B_es_99_monthly' THEN frpc.Col_B_es_99_monthly
+			WHEN 'Col_P_es_99_monthly' THEN frpc.Col_P_es_99_monthly
+			WHEN 'Col_B_es_99_monthly' THEN frpc.Col_B_es_99_monthly
+			WHEN 'Col_P_oad' THEN frpc.Col_P_oad
+			WHEN 'Col_B_oad' THEN frpc.Col_B_oad
+			WHEN 'Col_A_oad' THEN frpc.Col_A_oad
+			WHEN 'Col_A_oad_prev' THEN frpc.Col_A_oad - frpp.Col_A_oad
+			WHEN 'Col_P_oasd' THEN frpc.Col_P_oasd
+			WHEN 'Col_B_oasd' THEN frpc.Col_B_oasd
+			WHEN 'Col_A_oasd' THEN frpc.Col_A_oasd
+			WHEN 'Col_A_oasd_prev' THEN frpc.Col_A_oasd - frpp.Col_A_oasd
+			WHEN 'Col_P_dts' THEN frpc.Col_P_dts
+			WHEN 'Col_B_dts' THEN frpc.Col_B_dts
+			WHEN 'Col_A_dts' THEN frpc.Col_A_dts
+			WHEN 'Col_A_dts_prev' THEN frpc.Col_A_dts - frpp.Col_A_dts
+			WHEN 'Col_P_lcs' THEN frpc.Col_P_lcs
+			WHEN 'Col_B_lcs' THEN frpc.Col_B_lcs
+			WHEN 'Col_A_lcs' THEN frpc.Col_A_lcs
+			WHEN 'Col_A_lcs_prev' THEN frpc.Col_A_lcs - frpp.Col_A_lcs
+		END AS val,
+			WHEN 'Col_P_irm_mv' THEN ''
+			WHEN 'Col_P_irm_mv_prev' THEN ''
+			WHEN 'Col_P_irm_mv_usd' THEN ''
+			WHEN 'Col_P_irm_mv_prev' THEN ''
+			WHEN 'Col_A_var_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_A_es_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_A_var_99_monthly_prev' THEN 'Tail Risk'
+			WHEN 'Col_A_es_99_monthly_prev' THEN 'Tail Risk'
+			WHEN 'Col_P_var_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_B_var_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_P_es_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_B_es_99_monthly' THEN 'Tail Risk'
+			WHEN 'Col_P_oad' THEN 'Duration'
+			WHEN 'Col_B_oad' THEN 'Duration'
+			WHEN 'Col_A_oad' THEN 'Duration'
+			WHEN 'Col_A_oad_prev' THEN 'Duration'
+			WHEN 'Col_P_oasd' THEN 'Spread duration'
+			WHEN 'Col_B_oasd' THEN 'Spread duration'
+			WHEN 'Col_A_oasd' THEN 'Spread duration'
+			WHEN 'Col_A_oasd_prev' THEN 'Spread duration'
+			WHEN 'Col_P_dts' THEN 'DTS'
+			WHEN 'Col_A_dts_prev' THEN 'DTS'
+			WHEN 'Col_P_lcs' THEN 'ICS'
+			WHEN 'Col_B_lcs' THEN 'ICS'
+			WHEN 'Col_A_lcs' THEN 'ICS'
+			WHEN 'Col_A_lcs_prev' THEN 'ICS'
+		END AS selection,
+		CASE xref.metric
+			WHEN 'Col_P_irm_mv' THEN 1
+			WHEN 'Col_P_irm_mv_prev' THEN 1.5
+			WHEN 'Col_P_irm_mv_usd' THEN 1.75
+			WHEN 'Col_P_irm_mv_usd_prev' THEN 2
+			WHEN 'Col_A_var_99_monthly' THEN 6
+			WHEN 'Col_A_es_99_monthly' THEN 7
+			WHEN 'Col_A_var_99_monthly_prev' THEN 8
+			WHEN 'Col_A_es_99_monthly_prev' THEN 9
+			WHEN 'Col_P_var_99_monthly' THEN 10
+			WHEN 'Col_B_var_99_monthly' THEN 11
+			WHEN 'Col_P_es_99_monthly' THEN 12
+			WHEN 'Col_B_es_99_monthly' THEN 13
+			WHEN 'Col_P_oad' THEN 14
+			WHEN 'Col_B_oad' THEN 15
+			WHEN 'Col_A_oad' THEN 16
+			WHEN 'Col_A_oad_prev' THEN 17
+			WHEN 'Col_P_oasd' THEN 18
+			WHEN 'Col_B_oasd' THEN 19
+			WHEN 'Col_A_oasd' THEN 20
+			WHEN 'Col_A_oasd_prev' THEN 21
+			WHEN 'Col_P_dts' THEN 22
+			WHEN 'Col_B_dts' THEN 23
+			WHEN 'Col_A_dts' THEN 24
+			WHEN 'Col_A_dts_prev' THEN 25
+			WHEN 'Col_P_lcs' THEN 26
+			WHEN 'Col_B_lcs' THEN 27
+			WHEN 'Col_A_lcs' THEN 28
+			WHEN 'Col_A_lcs_prev' THEN 29
+		END AS sorting,
+		CASE xref.metric
+			WHEN 'Col_P_irm_mv' THEN 'MV (MM)'
+			WHEN 'Col_P_irm_mv_prev' THEN 'MV (Diff MM)'
+			WHEN 'Col_P_irm_mv_usd' THEN 'MV USD(MM)'
+			WHEN 'Col_P_irm_mv_usd_prev' THEN 'MV USD(Diff MM)'
+			WHEN 'Col_A_var_99_monthly' THEN '99% Net VaR'
+			WHEN 'Col_A_es_99_monthly' THEN '99% Net CVaR'
+			WHEN 'Col_A_var_99_monthly_prev' THEN 'Col_A 99% Net VaR (Diff)'
+			WHEN 'Col_A_es_99_monthly_prev' THEN 'Col_A 99% Net CVaR (Diff)'
+			WHEN 'Col_P_var_99_monthly' THEN 'Port 99% VaR'
+			WHEN 'Col_B_var_99_monthly' THEN 'Bmk 99% VaR'
+			WHEN 'Col_P_es_99_monthly' THEN 'Port 99% CVaR'
+			WHEN 'Col_B_es_99_monthly' THEN 'Bmk 99% CVaR'
+			WHEN 'Col_P_oad' THEN 'Port CTD'
+			WHEN 'Col_B_oad' THEN 'Bmk CTD'
+			WHEN 'Col_A_oad' THEN 'Col_A CTD'
+			WHEN 'Col_A_oad_prev' THEN 'Col_A CTD (Diff)'
+			WHEN 'Col_P_oasd' THEN 'Port CTSD'
+			WHEN 'Col_B_oasd' THEN 'Bmk CTSD'
+			WHEN 'Col_A_oasd' THEN 'Col_A CTSD'
+			WHEN 'Col_A_oasd_prev' THEN 'Col_A CTSD (Diff)'
+			WHEN 'Col_P_dts' THEN 'Port CTDTS'
+			WHEN 'Col_B_dts' THEN 'Bmk CTDTS'
+			WHEN 'Col_A_dts' THEN 'Col_A CTDTS'
+			WHEN 'Col_A_dts_prev' THEN 'Col_A CTDTS (Diff)'
+			WHEN 'Col_P_lcs' THEN 'Port LCS'
+			WHEN 'Col_B_lcs' THEN 'Bmk LCS'
+			WHEN 'Col_A_lcs' THEN 'Col_A LCS'
+			WHEN 'Col_A_lcs_prev' THEN 'Col_A ICS (Diff)'
+		END AS name,
+		CASE WHEN xref.metric like '%_prev' THEN '' // '6-10-2017' END AS qualifier,
+		NULL AS color
+	FROM PORT_FACT_Col_C frpc
+	LEFT OUTER JOIN PORT_FACT_Col_C_PREV frpp
+	ON frpc.rdm_Col_P_src_base_id = frpp.rdm_Col_P_src_base_id
+	AND frpc.rdm_Col_B_src_base_id = frpp.rdm_Col_B_src_base_id
+	AND frpc.rdm_Col_M_src_base_id = frpp.rdm_Col_M_src_base_id
+	AND frpc.rdm_Col_C_src_base_id = frpp.rdm_Col_C_src_base_id
+	CROSS JOIN XREF
+),
+PORT_EXP_FCT AS (
+	SELECT
+		rdm_Col_P_src_base_id,
+		rdm_Col_B_src_base_id,
+		rdm_Col_M_src_base_id,
+		rdm_Col_V_base_id,
+		rdm_Col_C_src_base_id,
+		engine_asof_calendar_date,
+		'(bps/annum)' AS units,
+		cntr_to_total_tev AS units,
+		'Tracking error' AS section,
+		CASE level_2_name
+			WHEN 'Systematic' THEN 3
+			WHEN 'Idiosyncratic' THEN 4
+			WHEN 'Credit default' THEN 5
+		END AS sorting,
+		CASE level_2_name
+			WHEN 'Systematic' THEN 'Systematic CTEV'
+			WHEN 'Idiosyncratic' THEN 'Idiosyncratic CTEV'
+			WHEN  'Credit default' THEN 'Default CTEV'
+		END AS name,
+		'' AS qualifier,
+		NULL AS color
+	FROM(
+		SELECT	
+			level_2_name,
+			SUM(cntr_to_total_tev) AS cntr_to_total_tev,
+			rpb.rdm_Col_P_src_base_id,
+			rpb.rdm_Col_B_src_base_id,
+			rpb.rdm_Col_M_src_base_id,
+			rpb.rdm_Col_V_base_id,
+			rpb.rdm_Col_C_src_base_id,
+			rpb.engine_asof_calendar_date
+		FROM Col_C_Col_V rpb
+		INNER JOIN fct_rdm_Col_P_exposure frpe
+		ON ( rpb.rdm_Col_P_src_base_id = frpe.rdm_Col_P_src_base_id
+		AND rpb.rdm_Col_B_src_base_id = frpe.rdm_Col_B_src_base_id
+		AND rpb.rdm_Col_M_src_base_id = frpe.rdm_Col_M_src_base_id
+		ADN rpb.rdm_Col_V_base_id = frpe.rdm_Col_V_base_id
+		AND rpb.rdm_Col_C_src_base_id = frpe.rdm_Col_C_src_base_id
+		AND rpb.engine_asof_calendar_date = frpe.engine_asof_calendar_date)
+		INNER JOIN dim_rdm_hierarchy_node drhn
+		ON ( frpe.rdm_hierarchy_node_base_id = drhn.rdm_hierarchy_node_base_id
+		AND drhn.hierarchy_source IN ('FI')--, 'Aladdin')
+		AND drhn.level_1_name = 'Total'
+		AND drhn.level_2_name in ('Systematic', 'Idiosyncratic', 'Credit default')
+		AND drhn.level_3_name = '')
+		WHERE rpb.engine_asof_calendar_date = TO_DATE('13-02-2018','DD-MM-YYYY')
+		GROUP BY
+			level_2_name,
+			rpb.rdm_Col_P_src_base_id,
+			rpb.rdm_Col_B_src_base_id,
+			rpb.rdm_Col_M_src_base_id,
+			rpb.rdm_Col_V_base_id,
+			rpb.rdm_Col_C_src_base_id,
+			rpb.engine_asof_calendar_date
+	) frpe
+),
+Col_T_FCT AS (
+	SELECT
+		rdm_Col_P_src_base_id,
+		rdm_Col_B_src_base_id,
+		rdm_Col_M_src_base_id,
+		rdm_Col_V_base_id,
+		rdm_Col_C_src_base_id,
+		engine_asof_calendar_date,
+		CASE xref.metric
+			WHEN 'rbu' THEN ''
+			WHEN 'rbu_prev' THEN ''
+			WHEN 'te' THEN '(bps/annum)'
+			WHEN 'te_prev' THEN '(bps/annum)'
+		END AS units,
+		CASE xref.metric
+			WHEN 'rbu' THEN frt.Col_Cent_rbu
+			WHEN 'rbu_prev' THEN frt.delta_rbu
+			WHEN 'te' THEN frt.Col_Cent_te
+			WHEN 'te_prev' THEN frt.delta_te
+		END AS val,
+		CASE xref.metric
+			WHEN 'rbu' THEN ''
+			WHEN 'rbu_prev' THEN ''
+			WHEN 'te' THEN 'Tracking Error'
+			WHEN 'te_prev' THEN 'Tracking Error'
+		END AS Section,
+		CASE xref.metric
+			WHEN 'rbu' THEN 2.01
+			WHEN 'rbu_prev' THEN 2.02
+			WHEN 'te' THEN 2.5
+			WHEN 'te_prev' THEN 2.51
+		END AS sorting,
+		CASE xref.metric
+			WHEN 'rbu' THEN 'RBU'
+			WHEN 'rbu_prev' THEN '(Diff)'
+			WHEN 'te' THEN 'TEV'
+			WHEN 'te_prev' THEN 'TEV' (Diff)'
+		END AS name,
+		CASE WHEN xref.metric like '%_prev' THEN'' // '6-10-2017' ELSE " END AS qualifier,
+		CASE xref.metric
+			WHEN 'rbu' THEN Col_T_band_rbu
+			WHEN 'te' THEN Col_T_band_te ELSE NULL
+		END AS color
+	FROM (
+		SELECT
+			MAX(Col_Cent_rbu) AS Col_Cent_rbu,
+			MAX(Col_Cent_rbu)-MAX(previous_rbu) AS delta_rbu,
+			MAX(Col_Cent_te) AS Col_Cent_te,
+			MAX(Col_Cent_te) AS MAX(previous_te) AS delta_te,
+			MAX(Col_T_band_te) AS Col_T_band_te,
+			MAX(Col_T_band_rbu'rbu) AS Col_T_band_rbu,
+			rdn_Col_P_src_base_id,
+			MAX(rdm__Col_P_src_hist_id) AS rdn_Col_P_src_hist_id,
+			rdm_Col_B_src_base_id,
+			MAX(rdm_Col_B_src_hist_id) AS rdm_Col_B_src_hist_id,
+			rdm_Col_M_src_base_id,
+			MAX(rdm_Col_M_src_hist_id) AS rdm__Col_M_src_hist_id
+			rdm_Col_C_src_base_id,
+			engine_asof_calendar_date,
+			MAX(rdm_Col_V_src_base_id) AS rdm_Col_V_src_base_id
+		FROM (
+			SELECT DISTINCT
+				CASE WHEN frt.engine_asof_calendar_date = '13-02-2018' THEN calculated_metric_value ELSE 0 END AS Col_Cent_rbu,
+				CASE WHEN frt.engine_asof_calendar_date = '6-10-2018' THEN calculated_metric_value ELSE 0 END AS previous_rbu,
+				CASE WHEN frt.engine_asof_calendar_date = '13-02-2018' THEN metric_value ELSE 0 END AS Col_Cent_te,
+				CASE WHEN frt.engine_asof_calendar_date = '6-10-2018' THEN metric_value ELSE 0 END AS previous_te,
+				CASE WHEN frt.engine_asof_calendar_date = '13-02-2018' THEN 
+					CASE
+						WHEN(frt.metric_value)>=upper_target THEN 'RED'
+						WHEN(frt.metric_value)> drt.lower_target AND (frt.metric_value)<= upper_target THEN 'AMBER'
+					END
+				END AS Col_T_band_te,
+				CASE WHEN frt.engine_asof_calendar_date = '13-02-2018'
+					CASE
+						WHEN(frt.metric_value)< drt.INTERNAL_LOWER_Col_T THEN 'GREEN'
+						WHEN(frt.metric_value)>=drt.internal_upper_Col_T THEN 'RED'
+						WHEN(frt.metric_value)> drt.INTERNAL_LOWER_Col_T AND (frt.calculated_metric_value) <= drt.internal_upper_Col_T THEN 'AMBER'
+					END
+				END AS Col_T_band_te,
+				CASE WHEN frt.engine_asof_calendar_date = '13-02-2018' THEN
+					CASE
+						WHEN(frt.calculated_metric_value) < drt.INTERNAL_LOWER_Col_T THEN 'GREEN'
+						WHEN(frt.calculated_metric_value) >= drt.internal_upper_Col_T THEN 'RED'
+						WHEN(frt.calculated_metric_value > drt.INTERNAL_LOWER_Col_T AND (frt.calculated_metric_value) <= drt.internal_upper_Col_T THEN 'AMBER'
+					END
+				END AS Col_T_band_rbu,
+				frt.rdm_Col_T_src_base_id,
+				frt.rdm__Col_P_src_hist_id,
+				frt.rdm_Col_B_src_base_id,
+				frt.rdm_Col_B_src_hist_id,
+				frt.rdm_Col_M_src_base_id,
+				frt.rdm__Col_M_src_hist_id,
+				'13-Feb-2018' AS engine_asof_calendar_date,
+				frt.rdm_Col_C_src_base_id,
+				rpb.rdm_Col_V_base_id
+			FROM Col_C_Col_V rpb
+			INNER JOIN (
+				SELECT *
+				FROM (
+					SELECT *, ROW_NUMBER() over ( PARTITION BY drtb.rdm_Col_V_base_id ORDER BY drtb.engine_run_timestamp_utc DESC) AS sorting
+					FROM dim_rdm_Col_T_Col_V drtb
+				) drtb
+				WHERE drtb.sorting =1
+			) drtb
+			ON rpb.rdm_Col_V_base_id = drtb.rdm_Col_V_base_id
+			JOIN fct-rdm_Col_T frt
+			ON (drtb.rdm_Col_T_Col_V_base_id = fct-rdm_Col_T_Col_V_base_id
+			AND rpb.rdm_Col_P_src_base_id = frt.rdn_Col_P_src_base_id
+			AND rpb.rdm_Col_B_src_base_id = frt.rdm_Col_B_src_base_id
+			AND rpb.rdm_Col_M_src_base_id = frt.rdm_Col_M_src_base_id
+			AND rpb.engine_asof_calendar_date = frt.engine_asof_calendar_date
+			AND rpb.rdm_Col_C_src_base_id = frt.rdm_Col_C_src_base_id )
+			INNER JOIN dim_rdm_Col_T_drt
+			ON drt.rdm_Col_T_src_hist_id = frt.rdm_Col_T_src_hist_id
+			WHERE drt.location<>'Stamford,CT'
+			AND calculated_metric = 'RBU'
+		) Col_T
+		GROUP BY
+			rdm_Col_P_src_base_id,
+			rdm_Col_B_src_base_id,
+			rdm_Col_M_src_base_id,
+			rdm_Col_C_src_base_id,
+			engine_asof_calendar_date
+	) frt
+	CROSS JOIN (
+		SELECT 'rbu' AS metric UNION ALL
+		SELECT 'rbu_prev' AS metric UNION ALL
+		SELECT 'te' AS metric UNION ALL
+		SELECT 'te_prev' AS metric
+	) xref
+),
+RDM_PORT_NSRD_XREF AS (
+	SELECT cadis_ranked.RDM_RADAR_Col_P_BASE_ID, cadis_ranked.SSGA_FUND_BASE_ID
+	FROM (
+		SELECT
+		*,
+		ROW_NUMBER() over (PARTITION BY CADIS_ID ORDER BY EFFECTIVE_TIMESTAMP DESC ) AS sorting
+		FROM xref_rdm_Col_P
+		WHERE RDM_RADAR_Col_P_BASE_ID <> -1
+		AND SSGA_FUND_BASE_ID <> -1) cadis_ranked
+	WHERE sorting = 1
+),
+REPORT_DATA AS (
+	SELECT * FROM PORT_FACT
+	UNION
+	SELECT * FROM PORT_EXP_FCT
+	UNION
+	SELECT * FROM Col_T_FCT
+)
+SELECT
+	CASE WHEN drp.factset_id <> '' OR vaf.ssga_fund_base_id IS NULL THEN drp.factset_id ELSE vsf.nsrd_fund_alias END AS Col_P_code,
+	CASE WHEN drp.Col_P_name <> ''OR vaf.ssga_fund_base_id IS NULL THEN drp.Col_P_name ELSE vsf.legal_name END AS Col_P_name,
+	CASE WHEN drp.management_location <> '' OR vaf.ssga_fund_base_id IS NULL THEN drp.management_location ELSE vsf.management_location END AS management_location,
+	CASE WHEN drp.ipa_investment_approach <> ''OR vaf.ssga_fund_base_id IS NULL THEN drp.ipa_investment_approach ELSE vsf.inv_approach END AS investment_approach,
+	CASE WHEN drp.ipa_Col_P_strategy <> ''OR vaf.ssga_fund_base_id IS NULL THEN drp.ipa_Col_P_strategy ELSE vsf.product_strategy END AS investment_approach,
+	CASE WHEN drp.lead_Col_P_manager <> ''OR vaf.ssga_fund_base_id IS NULL THEN drp.lead_Col_P_manager ELSE vsf.Col_P_manager END AS Col_P_manager,
+	drp.ipa_Col_P_strategy,
+	drp.ipa_Col_P_strategy2 ,
+	drp.ipa_Col_P_strategy3,
+	risk_Col_M_code ,
+	drb.Col_B_code,
+	inf_base_Col_C_code ,
+	SUM(CASE WHEN color is NULL THEN 0 WHEN color = 'RED' THEN 1 ELSE 0 END) OVER (PARTITION BY Col_Z.rdm_Col_P_src_base_id) AS red_count,
+	SUM(CASE WHEN color is NULL THEN 0 WHEN color = 'AMBER' THEN 1 ELSE 0 END) OVER (PARTITION BY Col_Z.rdm_Col_P_src_base_id) AS amber_count,
+	Col_Z.*
+FROM REPORT_DATA Col_Z
+INNER JOIN (
+	SELECT *
+	FROM (
+		SELECT
+			drp.*,
+			ROW_NUMBER() OVER (PARTITION BY rdm_Col_P_src_base_id ORDER BY engine_asof_calendar_date DESC, ENGINE_RUN_TIMESTAMP_UTC DESC) AS sorting
+		FROM dim_rdm_Col_P drp
+	) drp
+	WHERE sorting = 1
+) drp
+ON Col_Z.rdm_Col_P_src_base_id = drp.rdm_Col_P_src_base_id
+LEFT OUTER JOIN RDM_PORT_NSRD_XREF nsrdxref
+ON Col_Z.rdm_Col_P_src_base_id = nsrdxref.rdm_radar_Col_P_base_id
+LEFT OUTER JOIN vt2_saga_fund vsf
+ON NOW () BETWEEN EFFECTIVE_START_TIMESTAMP AND EFFECTIVE_END_TIMESTAMP
+AND vsf.saga_fund_base_id = frp.rdm_porfolio_src_base_id
+LEFT OUTER JOIN fct_rdm_porfolio frp
+ON Col_Z.rdm_Col_P_src_base_id = frp.rdm_porfolio_src_base_id
+AND Col_Z.rdm_Col_B_src_base_id = frp.rdm_Col_B_src_base_id
+AND Col_Z.rdm_Col_M_src_base_id = frp.rdm_Col_M_src_base_id
+AND Col_Z.rdm_Col_V_base_id = frp.rdm_Col_V_base_id
+AND Col_Z.engine_asof_calendar_date = frp.engine_asof_calendar_date
+AND Col_Z.rdm_Col_C_src_base_id = frp.rdm_Col_C_src_base_id
+LEFT OUTER JOIN (
+	SELECT *
+	FROM (
+		SELECT
+			*,
+			ROW_NUMBER() OVER (PARTITION BY rdm_Col_B_src_base_id ORDER BY engine_asof_calendar_date DESC, ENGINE_RUN_TIMESTAMP_UTC DESC) AS sorting
+		FROM dim_rdm_Col_B) drb
+	WHERE sorting = 1
+) drb
+ON Col_Z.rdm_Col_B_src_base_id =drb.rdm_Col_B_src_base_id
+LEFT OUTER JOIN (
+	SELECT *
+	FROM (
+		SELECT
+			*, ROW_NUMBER() OVER (PARTITION BY rdm_Col_M_src_base_id ORDER BY engine_asof_calendar_date DESC, ENGINE_RUN_TIMESTAMP_UTC DESC) AS sorting
+		FROM dim_rdm_Col_M) drm
+	WHERE sorting = 1
+) drm
+ON Col_Z.rdm_Col_M_src_base_id = drm.rdm_Col_M_src_base_id
+;
+
+		
+					
+		
+		
+		
+		
+
+	
+			
+			
+			
+			
+			
+	
+		

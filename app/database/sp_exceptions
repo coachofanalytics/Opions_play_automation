@@ -1,0 +1,272 @@
+WITH Col_T_Col_V AS (
+	SELECT *
+	FROM (
+		SELECT
+			drtb.*,
+			ROW_NUMBER()over (
+				PARTITION BY drtb.rdm_Col_V_Col_S_id
+				ORDER BY drtb.Col_E_run_timestamp_utc DESC
+			) AS sorting
+		FROM dim_rdm_Col_T_Col_V dtrb
+	) a
+	WHERE a.sorting = 1
+),
+FCT_DATA AS (
+	SELECT
+		frt.RDM_Col_P_SRC_Col_S_ID,
+		frt.RDM_Col_P_SRC_HIST_ID,
+		frt.RDM_Col_B_SRC_Col_S_ID,
+		frt.RDM_Col_B_SRC_HIST_ID,
+		frt.RDM_Col_M_SRC_Col_S_ID,
+		frt.RDM_Col_M_SRC_HIST_ID,
+		frt.RDM_Col_C_SRC_Col_S_ID,
+		frt.RDM_Col_C_SRC_HIST_ID,
+		frt.RDM_Col_H_NODE_Col_S_ID,
+		frt.Col_E_ASOF_CALENDAR_DATE,
+		pbat.RDM_Col_V_Col_S_ID,
+		frt.RDM_Col_T_Col_V_Col_S_ID,
+		frt.rdm_Col_T_src_Col_S_id,
+		frt.rdm_Col_T_scr_hist_id,
+		frt.ssga_Col_K_Col_S_id,
+		frt.ssga_Col_K_hist_id,
+		frt.METRIC_VALUE,
+		frt.Col_D_FROM_UPPER_Col_T,
+		frt.Col_D_FROM_LOWER_Col_T
+	FROM VWC_RDM_Col_P_Col_V pbat
+	INNER JOIN Col_T_Col_V tbat
+	ON tbat.RDM_Col_V_Col_S_ID = pbat.RDM_Col_V_Col_S_ID
+	INNER JOIN DIM_RDM_Col_V bat
+	ON bat.RDM_Col_V_Col_S_ID = pbat.RDM_Col_V_Col_S_ID
+	AND UPPER(bat.Col_E_NAME) IN ('FI','POINT','PORTPLUS')
+	INNER JOIN FCT_RDM_Col_T frt
+	ON frt.RDM_Col_P_SRC_Col_S_ID = pbat.RDM_Col_P_SRC_Col_S_ID
+	AND frt.RDM_Col_B_SRC_Col_S_ID = pbat.RDM_Col_B_SRC_Col_S_ID
+	AND frt.RDM_Col_M_SRC_Col_S_ID = pbat.RDM_Col_M_SRC_Col_S_ID
+	AND frt.Col_E_ASOF_CALENDAR_DATE = pbat.Col_E_ASOF_CALENDAR_DATE
+	AND frt.RDM_Col_T_Col_V_Col_S_ID = tbat.RDM_Col_T_Col_V_Col_S_ID
+	WHERE pbat.Col_E_ASOF_CALENDAR_DATE > TO_DATE($as_date, 'YYY-MM-DD') - 90
+	AND pbat.Col_E_ASOF_CALENDAR_DATE <= TO_DATE($as_date, 'YYYY-MM-DD')
+),
+FCT_WITH_PREV_DATA AS (
+SELECT
+	frt.RDM_Col_P_SRC_Col_S_ID,
+	frt.RDM_Col_P_SRC_HIST_ID,
+	frt.RDM_Col_B_SRC_Col_S_ID,
+	frt.RDM_Col_B_SRC_HIST_ID,
+	frt.RDM_Col_M_SRC_Col_S_ID,
+	frt.RDM_Col_M_SRC_HIST_ID,
+	frt.RDM_Col_C_SRC_Col_S_ID,
+	frt.RDM_Col_C_SRC_HIST_ID,
+	frt.RDM_Col_H_NODE_Col_S_ID,
+	frt.Col_E_ASOF_CALENDAR_DATE,
+	frt.RDM_Col_V_Col_S_ID,
+	frt.RDM_Col_T_Col_V_Col_S_ID,
+	frt.rdm_Col_T_src_Col_S_id,
+	frt.rdm_Col_T_scr_hist_id,
+	frt.ssga_Col_K_Col_S_id,
+	frt.ssga_Col_K_hist_id,
+	frt.METRIC_VALUE,
+	frt.Col_J_METRIC_VALUE,
+	frt.Col_D_FROM_UPPER_Col_T,
+	frt.Col_D_FROM_LOWER_Col_T,
+	LAG(Col_E_ASOF_CALENDAR_DATE, 1, NULL) OVER (
+		PARTITION BY RDM_Col_P_SRC_Col_S_ID, RDM_Col_B_SRC_Col_S_ID, RDM_Col_M_SRC_Col_S_ID, RDM_Col_C_SRC_Col_S_ID, RDM_Col_H_NODE_Col_S_ID, rdm_Col_T_src_Col_S_id
+		ORDER BY Col_E_ASOF_CALENDAR_DATE, RDM_Col_T_Col_V_Col_S_ID DESC ) AS PREV_Col_E_ASOF_CALENDAR_DATE,
+	LAG(Col_J_METRIC_VALUE, 1, NULL) OVER (
+		PARTITION BY RDM_Col_P_SRC_Col_S_ID, RDM_Col_B_SRC_Col_S_ID, RDM_Col_M_SRC_Col_S_ID, RDM_Col_C_SRC_Col_S_ID, RDM_Col_H_NODE_Col_S_ID, rdm_Col_T_src_Col_S_id
+		ORDER BY Col_E_ASOF_CALENDAR_DATE, RDM_Col_T_Col_V_Col_S_ID DESC ) AS PREV_Col_J_METRIC_VALUE
+FROM FCT_DATA frt
+),
+BREACHES AS (
+	SELECT
+		drt.asset_class,
+		CASE UPPER(drt.Col_T_type)
+			WHEN 'ETERNAL' THEN
+				CASE
+					WHEN frt.Col_D_from_upper_Col_T < 0 THEN 'GREEN'
+					WHEN frt.Col_D_from_upper_Col_T >= 0 THEN 'CRIMSON'
+				END
+			WHEN 'INTERNAL' THEN
+				CASE
+					WHEN frt.Col_D_from_lower_Col_T < 0 THEN 'GREEN'
+					WHEN frt.Col_D_from_lower_Col_T >= 0 AND frt.Col_D_from_upper_Col_T < 0 THEN 'AMBER'
+			END
+		END AS Col_T_BAND ,
+		frt.Col_E_asof_calendar_date,
+		frt.prev_Col_E_asof_calendar_date,
+		frt.rdm_Col_P_src_Col_S_id,
+		frt.rdm_Col_P_src_hist_id,
+		frt.rdm_Col_C_src_Col_S_id,
+		ftr.rdm_Col_H_node_Col_S_id,
+		drt.fund_alias,
+		CASE WHEN drp.Col_P_code <> '' THEN DRP.Col_P_CODE ELSE DRT.FUND_ALIAS END AS Col_P_CODE,
+		CASE WHEN drp.Col_P_name <> '' THEN DRP.Col_P_NAME ELSE VSF.LEGAL_NAME END AS Col_P_NAME,
+		frt.rdm_Col_B_src_Col_S_id,
+		frt.rdm_Col_B_src_hist_id,
+		CASE WHEN drb.Col_B_code <> '' THEN DRB.Col_B_CODE ELSE DRT.Col_B_CODE END AS Col_B_CODE,
+		drb.Col_B_name,
+		frt.rdm_Col_M_src_Col_S_id,
+		frt.rdm_Col_M_src_hist_id,
+		CASE WHEN drm.risk_Col_M_code <> '' THEN DRM.RISK_Col_M_CODE ELSE DRT.RISK_Col_M_CODE END AS RISK_Col_M_CODE,
+		drt.metric,
+		drt.classification_type,
+		case UPPER(drt.classification_type)
+			WHEN 'RATING' THEN DRT.RATING
+			WHEN 'Col_CENCY' THEN DRT.Col_C_CODE
+			WHEN 'COUNTRY' THEN DRT.COUNTRY_NAME
+			WHEN 'ISSUER' THEN DRT.ISSUER_CODE
+			WHEN 'SECTOR' THEN DRT.SECTOR_NAME
+		END AS FACTOR ,
+		drt.Col_J_metric,
+		CASE WHEN drt.Col_J_metric = 'MV' THEN frt.Col_J_metric_value * 100 ELSE frt.Col_J_metric_value END AS Col_J_metric_value,
+		CASE WHEN drt.Col_J_metric = 'MV' THEN frt.metric_value * 100 ELSE frt.metric_value END AS metric_value,
+		drt.upper_target,
+		drt.lower_target,
+		CASE WHEN drt.Col_J_metric = 'MV' THEN drt.internal_upper_Col_T * 100 ELSE drt.internal_upper_Col_T END AS internal_upper_Col_T,
+		CASE WHEN drt.Col_J_metric = 'MV' THEN drt.internal_lower_Col_T * 100 ELSE drt.internal_lower_Col_T END AS internal_lower_Col_T,
+		drt.external_upper_Col_T,
+		CASE WHEN drt.Col_J_metric = 'MV' THEN frt.prev_Col_J_metric * 100 ELSE frt.prev_Col_J_metric_value END AS prev_Col_J_metric_value,
+		drt.Col_T_type,
+		CASE WHEN nvl(vsf.management_location,'') = '' THEN drp.management_location ELSE vsf.management_location END AS management_location,
+		vsf.inv_approach				AS investment_approach,
+		drp.ipa_Col_P_strategy		AS selection_strategy,
+		drp.ipa_Col_P_strategy2		AS sub_strategy,
+		CASE WHEN UPPER(Col_T_band) in ('RED','CRIMSON') THEN 'Y' ELSE 'N' END AS exceedance_flag
+	FROM FCT_WITH_PREV_DATA frt
+	INNER JOIN vt2_rdm_Col_T drt
+	ON drt.rdm_Col_T_src_Col_S_id = frt.rdm_Col_T_src_Col_S_id
+	AND drt.rdm_Col_T_scr_hist_id = frt.rdm_Col_T_scr_hist_id
+	AND UPPER(drt.ASSET_CLASS) IN ('FI','POINT','PORTPLUS')
+	LEFT OUTER JOIN vcu_rdm_Col_P drp
+	ON drp.rdm_Col_P_src_Col_S_id = frt.rdm_Col_P_src_Col_S_id
+	LEFT OUTER JOIN vt2_ssga_fund vsf
+	ON vsf.ssga_fund_Col_S_id = frt.ssga_Col_K_Col_S_id
+	AND now() >= vsf.effective_start_timestamp AND now() < vsf.effective_end_timestamp
+	LEFT OUTER JOIN vcu_rdm_Col_B drb
+	ON drm.rdm_Col_B_src_Col_S_id = frt.rdm_Col_B_src_Col_S_id
+	LEFT OUTER JOIN vcu_rdm_Col_M drm
+	ON drm.rdm_Col_M_src_Col_S_id = frt.rdm_Col_M_src_Col_S_id
+	WHERE frt.Col_E_ASOF_CALENDAR_DATE = TO_DATE($AS_DATE, 'YYYY-MM-DD')
+	AND Col_T_band IS NOT NULL
+	--Remove when in Aginity
+	--whereParams
+	AND Col_T_band <> 'GREEN'
+),
+Col_XS AS (
+	SELECT
+		RDM_Col_X_Col_V_Col_S_ID,
+		EFFECTIVE_TIMESTAMP,
+		RDM_Col_X_BID,
+		RDM_Col_X_EFFECTIVITY_BID,
+		RDM_Col_X_EFFECTIVITY_HID,
+		RDM_Col_P_SRC_HIST_ID,
+		RDM_Col_P_SRC_Col_S_ID,
+		RDM_Col_B_SRC_HIST_ID,
+		RDM_Col_B_SRC_Col_S_ID,
+		RDM_Col_M_SRC_HIST_ID,
+		RDM_Col_M_SRC_Col_S_ID,
+		METRIC,
+		MANAGEMENT_REPORT_FLAG,
+		REASON_CODE,
+		REASON_DESCRIPTION,
+		EFFECTIVE_START_CALENDAR_DATE,
+		EFFECTIVE_END_CALENDAR_DATE,
+		Col_X_DESCRIPTION,
+		USER_GROUP,
+		USER_NAME,
+		RDM_METRIC_GROUP_BID,
+		RDM_METRIC_BID,
+		RDM_Col_H_NODE_Col_S_ID,
+		Col_T_TYPE
+	FROM (
+		select
+			row_number() OVER (
+				PARTITION BY
+					rdm_Col_P_src_Col_S_id,
+					rdm_Col_B_src_Col_S_id,
+					rdm_Col_M_src_Col_S_id,
+					metric,
+					Col_T_type,
+					rdm_Col_H_node_Col_S_id,
+				ORDER BY EFFECTIVE_START_CALENDAR_DATE DESC) as row_num ,
+			*
+		from vwc_rdm_Col_X com
+		where NOW() BETWEEN com.EFFECTIVE_START_CALENDAR_DATE AND com.EFFECTIVE_END_CALENDAR_DATE -- Col_Xs valid as of today
+	) Col_Xs
+	WHERE Col_X.row_num =1
+)
+
+SELECT
+	breach.ASSET_CLASS,
+	breach.Col_T_BAND,
+	breach.Col_E_ASOF_CALENDAR_DATE,
+	breach.PREV_Col_E_ASOF_CALENDAR_DATE,
+	com.management_report_flag,
+	breach.RDM_Col_P_SRC_Col_S_ID,
+	breach.RDM_Col_P_SRC_HIST_ID,
+	breach.Col_P_CODE,
+	breach.Col_P_NAME,
+	breach.RDM_Col_B_SRC_Col_S_ID,
+	breach.RDM_Col_B_SRC_HIST_ID,
+	breach.Col_B_CODE,
+	breach.Col_B_NAME,
+	breach.RDM_Col_M_SRC_Col_S_ID,
+	breach.RDM_Col_M_SRC_HIST_ID,
+	breach.RISK_Col_M_CODE,
+	breach.METRIC,
+	breach.CLASSIFICATION_TYPE,
+	breach.FACTOR,
+	breach.Col_J_METRIC,
+	breach.Col_J_METRIC_VALUE,
+	breach.METRIC_VALUE,
+	breach.UPPER_TARGET,
+	breach.LOWER_TARGET,
+	breach.INTERNAL_UPPER_Col_T,
+	breach.INTERNAL_LOWER_Col_T,
+	breach.EXTERNAL_UPPER_Col_T,
+	breach.PREV_Col_J_METRIC_VALUE,
+	com.reason_code,
+	com.reason_description,
+	com.effective_start_calendar_date,
+	com.effective_end_calendar_date,
+	com.Col_X_description,
+	com.rdm_Col_X_bid,
+	com.rdm_Col_X_effectivity_bid,
+	com,user_group,
+	com.user_name,
+	com.rdm_metric_group_bid,
+	com.rdm_metric_bid,
+	com.rdm_Col_H_node_Col_S_id,
+	breach.Col_T_TYPE,
+	breach.MANAGEMENT_LOCATION,
+	breach.INVESTMENT_APPROACH,
+	breach.SELECTION_STRATEGY,
+	breach.SUB_STRATEGY
+FROM BREACHES breach
+LEFT OUTER JOIN Col_XS com
+ON com.rdm_Col_P_src_Col_S_id = breach.rdm_Col_P_src_Col_S_id
+AND com.rdm_Col_B_src_Col_S_id = breach.rdm_Col_B_src_Col_S_id
+AND com.rdm_Col_M_src_Col_S_id = breach.rdm_Col_M_src_Col_S_id
+AND com.metric = breach.metric
+AND com.Col_T_type = breach.Col_T_type
+ANS com.rdm_Col_H_node_Col_S_id = breach.rdm_Col_H_node_Col_S_id
+--WHERE com.Col_X_DESCRIPTION IS NOT NULL -- Col_Xs exists
+WHERE
+	breach.MANAGEMENT_LOCATION<>'Stamford,CT'
+--whereTabCondition
+ORDER BY breach.Col_P_CODE,
+		 breach.Col_P_NAME,
+		 breach.Col_B_CODE,
+		 breach.Col_B_NAME,
+		 breach.CLASSIFICATION_TYPE,
+		 breach.FACTOR,
+		 breach.METRIC,
+		 Col_T_band DESC,
+		 effective_timestamp DESC,
+		 com.reason_code,
+		 breach.Col_J_METRIC
+;
+					
+	
+			
+	
