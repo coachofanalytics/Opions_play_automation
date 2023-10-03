@@ -82,6 +82,7 @@ def dump_data(df, choice):
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
+        print('if CreditSpreadFile')
         # df = pd.read_csv('credit_spread.csv')
         csv_file_path = 'credit_spread.csv'
         vl_merged_df = merged_data()
@@ -100,6 +101,7 @@ def dump_data(df, choice):
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
+        print('elif coveredCalls')
         vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
@@ -116,6 +118,7 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
+        print('else shortput')
         vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
