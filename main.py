@@ -95,6 +95,7 @@ def dump_data(df, choice):
         df['rank'] = df['rank'].str.replace("%", "").astype(float)
         df['price'] = df['price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
 
+        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
