@@ -105,6 +105,8 @@ def dump_data(df, choice):
         vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
+        print('===============',df)
+        print('=------------------------=',new_columns)
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
         df['comment'] = 'comment'
@@ -123,6 +125,7 @@ def dump_data(df, choice):
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
+        print('===============',df)
         df['Stock Price'] = df['Stock Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)
         df['comment'] = ' '
