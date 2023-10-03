@@ -116,8 +116,10 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
+        print("yes its else conditon")
         vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
+        print("yes df=====",df)
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
