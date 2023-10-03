@@ -82,7 +82,6 @@ def dump_data(df, choice):
     Session = sessionmaker(bind=engine)
 
     if choice == 'CreditSpreadFile':
-        print('if CreditSpreadFile')
         # df = pd.read_csv('credit_spread.csv')
         csv_file_path = 'credit_spread.csv'
         vl_merged_df = merged_data()
@@ -101,12 +100,10 @@ def dump_data(df, choice):
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
-        print('elif coveredCalls')
         vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
-        print('===============',df)
-        print('=------------------------=',new_columns)
+        df.columns = new_columns
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)  # Convert 'expiry' column to datetime format
         df['comment'] = 'comment'
@@ -120,13 +117,11 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
-        print('else shortput')
         vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
-        print('===============',df)
-        df['Stock Price'] = df['Stock Price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
+        df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
         df['expiry'] = pd.to_datetime(df['expiry'], utc=True)
         df['comment'] = ' '
         df['on_date'] = ' '
