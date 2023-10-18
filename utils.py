@@ -12,6 +12,12 @@ except KeyError:
     #logger.info("Token not available!")
     #raise
 
+# host = os.environ.get('HEROKU_DEV_HOST')
+# database_name = os.environ.get('HEROKU_DEV_NAME')
+# user_name = os.environ.get('HEROKU_DEV_USER')
+# password = os.environ.get('HEROKU_DEV_PASS')
+# port='5432'
+
 user_name= os.environ['USER']
 password= os.environ['PASSWORD']
 host= os.environ['HOST']
@@ -110,15 +116,15 @@ def fetch_data_util(ticker_symbol):
             return {}
     return data
 
-
 def merged_data():
     # Merge liquidity and unusual volume
-    csv_file_path_uv='unusual_volume.csv'
-    csv_file_path_lq='liquidity.csv'
-    unusual_df = read_data_from_csv(csv_file_path_uv)[0]
+    csv_file_path_uv = 'unusual_volume.csv'
+    csv_file_path_lq = 'liquidity.csv'
+    # unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
 
-    vl_merged_df = pd.merge(unusual_df,liquidity_df [['symbol']], on='symbol', how='inner')
+    # vl_merged_df = pd.merge(unusual_df, liquidity_df[['symbol']], on='symbol', how='inner')
+    vl_merged_df =liquidity_df
 
     # Fetch EBITDA for each symbol in unusual_df
     vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
@@ -129,7 +135,6 @@ def merged_data():
     # Apply other filters
     # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
     # filtered_df = positive_ebitda_df
-
     return positive_ebitda_df
 
 def process_data(df,vl_merged_df):

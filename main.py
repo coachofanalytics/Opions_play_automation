@@ -97,6 +97,8 @@ def dump_data(df, choice):
 
         merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
         # Replace old records with new data in the database table
+        merged_df['id'] = range(1, len(merged_df) + 1)
+        # Generate unique IDs for the new data in merged_df
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
