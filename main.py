@@ -105,6 +105,7 @@ def dump_data(df, choice):
     elif choice == 'coveredCalls':
         vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
+        print("df2------------",df)
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df.columns = new_columns
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
@@ -122,6 +123,7 @@ def dump_data(df, choice):
     else:
         vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
+        print("df3------------",df)
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
         df['stock_price'] = df['stock_price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
