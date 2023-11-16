@@ -87,6 +87,7 @@ def dump_data(df, choice):
         vl_merged_df = merged_data()
         try:
             df=read_data_from_csv(csv_file_path)[0]
+            print("df------------",df)
         except:
             print('No Report is available')
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
