@@ -83,7 +83,7 @@ def dump_data(df, choice):
 
     if choice == 'CreditSpreadFile':
         # df = pd.read_csv('credit_spread.csv')
-        csv_file_path = 'Opions_play_automation/credit_spread.csv'
+        csv_file_path = 'credit_spread.csv'
         vl_merged_df = merged_data()
         try:
             df=read_data_from_csv(csv_file_path)[0]
@@ -104,7 +104,7 @@ def dump_data(df, choice):
         
     elif choice == 'coveredCalls':
         vl_merged_df = merged_data()
-        df = pd.read_csv('Opions_play_automation/covered_calls.csv')
+        df = pd.read_csv('covered_calls.csv')
         print("df2------------",df)
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
         df.columns = new_columns
@@ -122,7 +122,7 @@ def dump_data(df, choice):
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
         vl_merged_df = merged_data()
-        df = pd.read_csv('Opions_play_automation/shortput.csv')
+        df = pd.read_csv('shortput.csv')
         print("df3------------",df)
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
         df.columns = new_columns
