@@ -84,8 +84,8 @@ def dump_data(df, choice):
     if choice == 'CreditSpreadFile':
         # df = pd.read_csv('credit_spread.csv')
         csv_file_path = 'credit_spread.csv'
-        vl_merged_df = merged_data()
-        print('Print VL_Merged', len(vl_merged_df), vl_merged_df)
+        # vl_merged_df = merged_data()
+        # print('Print VL_Merged', len(vl_merged_df), vl_merged_df)
         try:
             df=read_data_from_csv(csv_file_path)[0]
             print("df------------",df)
@@ -97,7 +97,8 @@ def dump_data(df, choice):
         df['rank'] = df['rank'].str.replace("%", "").astype(float)
         df['price'] = df['price'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)
 
-        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        # merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        merged_df = df
         # Replace old records with new data in the database table
         merged_df['id'] = range(1, len(merged_df) + 1)
         # Generate unique IDs for the new data in merged_df
@@ -105,7 +106,7 @@ def dump_data(df, choice):
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
-        vl_merged_df = merged_data()
+        # vl_merged_df = merged_data()
         df = pd.read_csv('covered_calls.csv')
         print("df2------------",df)
         new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
@@ -116,7 +117,8 @@ def dump_data(df, choice):
         df['on_date'] = ' '
         df['is_active'] = True
         df['is_featured'] = True
-        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        # merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        merged_df = df
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
 
@@ -124,7 +126,7 @@ def dump_data(df, choice):
         print('before populating in db', len(merged_df), merged_df)
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
-        vl_merged_df = merged_data()
+        # vl_merged_df = merged_data()
         df = pd.read_csv('shortput.csv')
         print("df3------------",df)
         new_columns = [x.lower().replace(" ", "_").replace("/", "_") for x in df.columns]
@@ -136,7 +138,8 @@ def dump_data(df, choice):
         df['is_active'] = True
         df['is_featured'] = True
 
-        merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        # merged_df = pd.merge(df, vl_merged_df[['symbol']], on='symbol', how='inner')
+        merged_df = df
 
         # Generate unique IDs for the new data in merged_df
         merged_df['id'] = range(1, len(merged_df) + 1)
@@ -144,7 +147,6 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         print('before populating in db', len(merged_df), merged_df)
         merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
-
 
 
 def parse_data(html, choice):

@@ -134,7 +134,7 @@ def merged_data():
 
     # Apply other filters
     # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
-    positive_ebitda_df =  vl_merged_df[(vl_merged_df['price'] >= 15)]
+    positive_ebitda_df =  vl_merged_df
     return positive_ebitda_df
 
 def process_data(df,vl_merged_df):
