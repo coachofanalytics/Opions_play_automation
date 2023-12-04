@@ -119,7 +119,7 @@ def fetch_data_util(ticker_symbol):
 def merged_data():
     # Merge liquidity and unusual volume
     csv_file_path_uv = 'unusual_volume.csv'
-    csv_file_path_lq = 'liquidity.csv'
+    csv_file_path_lq = 'Opions_play_automation/liquidity.csv'
     # unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
 
