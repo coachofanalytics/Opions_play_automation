@@ -100,6 +100,7 @@ def dump_data(df, choice):
         # Replace old records with new data in the database table
         merged_df['id'] = range(1, len(merged_df) + 1)
         # Generate unique IDs for the new data in merged_df
+        print('before populating in db', len(merged_df), merged_df)
         merged_df.to_sql('investing_credit_spread', engine, if_exists='replace', index=False)
         
     elif choice == 'coveredCalls':
@@ -119,6 +120,7 @@ def dump_data(df, choice):
         merged_df['id'] = range(1, len(merged_df) + 1)
 
         # Replace old records with new data in the database table
+        print('before populating in db', len(merged_df), merged_df)
         merged_df.to_sql('investing_covered_calls', engine, if_exists='replace', index=False)
     else:
         vl_merged_df = merged_data()
@@ -139,6 +141,7 @@ def dump_data(df, choice):
         merged_df['id'] = range(1, len(merged_df) + 1)
 
         # Replace old records with new data in the database table
+        print('before populating in db', len(merged_df), merged_df)
         merged_df.to_sql('investing_shortput', engine, if_exists='replace', index=False)
 
 
