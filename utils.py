@@ -127,14 +127,14 @@ def merged_data():
     vl_merged_df =liquidity_df
 
     # Fetch EBITDA for each symbol in unusual_df
-    vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
+    # vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
 
     # Filter out symbols where EBITDA <= 0
-    positive_ebitda_df = vl_merged_df[vl_merged_df['ebitda'] > -300000]
+    # positive_ebitda_df = vl_merged_df[vl_merged_df['ebitda'] > -300000]
 
     # Apply other filters
     # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
-    # filtered_df = positive_ebitda_df
+    positive_ebitda_df =  vl_merged_df[(vl_merged_df['price'] >= 15)]
     return positive_ebitda_df
 
 def process_data(df,vl_merged_df):

@@ -85,6 +85,7 @@ def dump_data(df, choice):
         # df = pd.read_csv('credit_spread.csv')
         csv_file_path = 'credit_spread.csv'
         vl_merged_df = merged_data()
+        print('Print VL_Merged', len(vl_merged_df), vl_merged_df)
         try:
             df=read_data_from_csv(csv_file_path)[0]
             print("df------------",df)
