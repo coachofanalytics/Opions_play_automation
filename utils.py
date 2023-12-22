@@ -67,12 +67,13 @@ def save_data_to_db(ticker_symbol, data):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        cursor.execute("DELETE FROM investing_ticker_data WHERE symbol = %s", (ticker_symbol, ))
 
         insert_sql = """
             INSERT INTO investing_ticker_data
             (symbol, overallrisk, sharesshort, enterpriseToEbitda, ebitda, 
-             quickratio, currentratio, revenuegrowth, fetched_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+             quickratio, currentratio, revenuegrowth, fetched_date, industry)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
 
         cursor.execute(
@@ -86,7 +87,8 @@ def save_data_to_db(ticker_symbol, data):
                 data.get('quickRatio', None),
                 data.get('currentRatio', None),
                 data.get('revenueGrowth', None),
-                datetime.now().date()  # Current date
+                datetime.now().date(),  # Current date
+                data.get('industry', None)
             )
         )
 
@@ -101,15 +103,15 @@ def fetch_data_util(ticker_symbol):
     db_data = load_data_from_db(ticker_symbol)
     
     if db_data:
-        columns = ["symbol", "overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "fetched_date"]
+        columns = ["id", "symbol", "overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "fetched_date"]
         data = dict(zip(columns, db_data))
     else:
         try:
             ticker_data = yf.Ticker(ticker_symbol)
             full_data = ticker_data.info
-            valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth"]
+            valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "industry"]
             data = {key: full_data.get(key, None) for key in valuation_keys}
-            
+            print(ticker_symbol, data['industry'])
             save_data_to_db(ticker_symbol, data)
         except Exception as e:
             print(f"Error fetching data from yfinance for {ticker_symbol}: {e}")
@@ -120,22 +122,24 @@ def merged_data():
     # Merge liquidity and unusual volume
     csv_file_path_uv = 'unusual_volume.csv'
     csv_file_path_lq = 'liquidity.csv'
-    # unusual_df = read_data_from_csv(csv_file_path_uv)[0]
+    unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
-
-    # vl_merged_df = pd.merge(unusual_df, liquidity_df[['symbol']], on='symbol', how='inner')
-    vl_merged_df =liquidity_df
+    
+    vl_merged_df = pd.merge(unusual_df, liquidity_df[['symbol']], on='symbol', how='inner')
+    # vl_merged_df =liquidity_df
 
     # Fetch EBITDA for each symbol in unusual_df
-    # vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
+    vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
 
     # Filter out symbols where EBITDA <= 0
-    # positive_ebitda_df = vl_merged_df[vl_merged_df['ebitda'] > -300000]
+    positive_ebitda_df = vl_merged_df[vl_merged_df['ebitda'] > 0]
 
     # Apply other filters
-    # filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
-    positive_ebitda_df =  vl_merged_df
-    return positive_ebitda_df
+    filtered_df = positive_ebitda_df[(positive_ebitda_df['price'] >= 15) & (positive_ebitda_df['volume'] > 1000)]
+    print('filtered_df')
+    print(filtered_df)
+    # positive_ebitda_df =  vl_merged_df
+    return filtered_df
 
 def process_data(df,vl_merged_df):
     new_columns = [x.replace(" ", "_").replace("/", "_").lower() for x in df.columns]
