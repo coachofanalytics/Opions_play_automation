@@ -44,7 +44,7 @@ def load_data_from_db(ticker_symbol):
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM investing_ticker_data WHERE symbol = %s AND fetched_date >= %s", 
-                       (ticker_symbol, datetime.now() - timedelta(days=30)))
+                       (ticker_symbol, datetime.now() - timedelta(days=1)))
         data = cursor.fetchone()
 
         cursor.close()
