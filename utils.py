@@ -102,20 +102,20 @@ def save_data_to_db(ticker_symbol, data):
 def fetch_data_util(ticker_symbol):
     db_data = load_data_from_db(ticker_symbol)
     
-    if db_data:
-        columns = ["id", "symbol", "overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "fetched_date"]
-        data = dict(zip(columns, db_data))
-    else:
-        try:
-            ticker_data = yf.Ticker(ticker_symbol)
-            full_data = ticker_data.info
-            valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "industry"]
-            data = {key: full_data.get(key, None) for key in valuation_keys}
-            print(ticker_symbol, full_data, data['industry'])
-            save_data_to_db(ticker_symbol, data)
-        except Exception as e:
-            print(f"Error fetching data from yfinance for {ticker_symbol}: {e}")
-            return {}
+    # if db_data:
+    #     columns = ["id", "symbol", "overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "fetched_date"]
+    #     data = dict(zip(columns, db_data))
+    # else:
+    try:
+        ticker_data = yf.Ticker(ticker_symbol)
+        full_data = ticker_data.info
+        valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "industry"]
+        data = {key: full_data.get(key, None) for key in valuation_keys}
+        print(ticker_symbol, full_data, data['industry'])
+        save_data_to_db(ticker_symbol, data)
+    except Exception as e:
+        print(f"Error fetching data from yfinance for {ticker_symbol}: {e}")
+        return {}
     return data
 
 def merged_data():
@@ -125,8 +125,8 @@ def merged_data():
     unusual_df = read_data_from_csv(csv_file_path_uv)[0]
     liquidity_df = read_data_from_csv(csv_file_path_lq)[0]
     
-    vl_merged_df = pd.merge(unusual_df, liquidity_df[['symbol']], on='symbol', how='inner')
-    # vl_merged_df =liquidity_df
+    # vl_merged_df = pd.merge(unusual_df, liquidity_df[['symbol']], on='symbol', how='inner')
+    vl_merged_df =liquidity_df
 
     # Fetch EBITDA for each symbol in unusual_df
     vl_merged_df['ebitda'] = vl_merged_df['symbol'].apply(lambda x: fetch_data_util(x).get('ebitda', None))
