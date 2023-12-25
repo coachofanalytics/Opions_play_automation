@@ -111,7 +111,7 @@ def fetch_data_util(ticker_symbol):
             full_data = ticker_data.info
             valuation_keys = ["overallRisk", "sharesShort", "enterpriseToEbitda", "ebitda", "quickRatio", "currentRatio", "revenueGrowth", "industry"]
             data = {key: full_data.get(key, None) for key in valuation_keys}
-            print(ticker_symbol, data['industry'])
+            print(ticker_symbol, full_data, data['industry'])
             save_data_to_db(ticker_symbol, data)
         except Exception as e:
             print(f"Error fetching data from yfinance for {ticker_symbol}: {e}")
