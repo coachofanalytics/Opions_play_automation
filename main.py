@@ -246,8 +246,8 @@ def main_cread_spread():
 
 if __name__ == '__main__':
     main_cread_spread()
-    # main_shortput()
-    # main_covered_calls()
+    main_shortput()
+    main_covered_calls()
     # send_email()
     time = datetime.datetime.now()
     logger.info(f'Code Executed : {time}')
