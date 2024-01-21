@@ -1,10 +1,2 @@
 Symbol,Strategy,Type,Price,Sell Strike,Buy Strike,Expiry,Premium,Width,Prem/Width,IV Rank,Earnings Date
-BOIL,Bullish,Put,$26.42,$26.00,$22.00,03/01/2024,$1.87,$4.00,46.63%,29%,
-SMCI,Bullish,Put,$426.64,$420.00,$370.00,03/01/2024,$21.45,$50.00,42.9%,50%,01/29/2024 (9) PM
-PINS,Bullish,Put,$37.16,$37.00,$34.00,03/01/2024,$1.17,$3.00,39%,57%,02/05/2024 (16) PM
-SNOW,Bullish,Put,$191.19,$190.00,$175.00,03/01/2024,$5.60,$15.00,37.33%,16%,02/28/2024 (39) PM
-WYNN,Bullish,Put,$93.69,$93.00,$87.00,03/01/2024,$2.12,$6.00,35.25%,61%,02/07/2024 (18) PM
-KHC,Bullish,Put,$37.22,$37.00,$36.00,03/01/2024,$0.35,$1.00,35%,46%,02/14/2024 (25) AM
-SBUX,Bearish,Call,$94.10,$95.00,$100.00,03/01/2024,$1.74,$5.00,34.9%,75%,01/30/2024 (10) PM
-USO,Bearish,Call,$68.76,$69.00,$75.00,03/01/2024,$2.04,$6.00,34.08%,34%,
-CURE,Bullish,Put,$107.96,$107.00,$99.00,03/15/2024,$2.65,$8.00,33.12%,25%,
+Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...,Loading...
