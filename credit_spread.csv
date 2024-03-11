@@ -1,5 +1,5 @@
 Symbol,Strategy,Type,Price,Sell Strike,Buy Strike,Expiry,Premium,Width,Prem/Width,IV Rank,Earnings Date
 LABU,Bullish,Put,$154.75,$150.00,$131.00,04/19/2024,$7.80,$19.00,41.05%,52%,
-CRWD,Bullish,Put,$325.62,$320.00,$300.00,04/19/2024,$7.43,$20.00,37.12%,92%,05/29/2024 (80) PM
+CRWD,Bullish,Put,$325.62,$320.00,$300.00,04/19/2024,$7.43,$20.00,37.12%,92%,05/29/2024 (79) PM
 XBI,Bullish,Put,$99.36,$99.00,$93.00,04/19/2024,$2.13,$6.00,35.5%,54%,
 HACK,Bullish,Put,$64.87,$64.00,$62.00,04/19/2024,$0.68,$2.00,33.75%,50%,
